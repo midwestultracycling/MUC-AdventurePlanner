@@ -1,0 +1,3123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RouteScout - Cycling Adventure Planner</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fafafa; color: #1a1a1a; }
+
+    .container { max-width: 1400px; margin: 0 auto; padding: 0 24px; }
+    .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .btn { padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; font-weight: 500; font-size: 14px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-primary { background: #2563eb; color: white; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-secondary { background: #f3f4f6; color: #374151; }
+    .btn-secondary:hover { background: #e5e7eb; }
+    .btn-outline { background: transparent; border: 1px solid #e5e7eb; color: #374151; }
+    .btn-outline:hover { background: #f9fafb; border-color: #d1d5db; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-sm { padding: 8px 16px; font-size: 13px; }
+    .btn-xs { padding: 4px 10px; font-size: 12px; }
+
+    header { padding: 16px 0; border-bottom: 1px solid #e5e7eb; background: white; position: sticky; top: 0; z-index: 100; }
+    .header-content { display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-size: 22px; font-weight: 700; color: #1a1a1a; display: flex; align-items: center; gap: 10px; }
+    .logo svg { width: 28px; height: 28px; }
+    .header-actions { display: flex; gap: 12px; align-items: center; }
+
+    .unit-toggle { display: flex; align-items: center; gap: 8px; background: #f3f4f6; padding: 4px; border-radius: 8px; }
+    .unit-toggle button { padding: 6px 12px; border: none; background: transparent; cursor: pointer; font-size: 13px; font-weight: 500; color: #6b7280; border-radius: 6px; transition: all 0.2s; }
+    .unit-toggle button.active { background: white; color: #1a1a1a; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+    .input-section { padding: 40px 0; }
+    .input-tabs { display: flex; gap: 4px; margin-bottom: 24px; background: #f3f4f6; padding: 4px; border-radius: 10px; width: fit-content; }
+    .input-tab { padding: 10px 20px; border: none; background: transparent; cursor: pointer; font-size: 14px; font-weight: 500; color: #6b7280; border-radius: 8px; transition: all 0.2s; }
+    .input-tab.active { background: white; color: #1a1a1a; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: #6b7280; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-group input, .form-group select { width: 100%; padding: 14px 16px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 15px; transition: border-color 0.2s; }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: #2563eb; }
+
+    .file-drop { border: 2px dashed #d1d5db; border-radius: 12px; padding: 48px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafafa; }
+    .file-drop:hover, .file-drop.dragover { border-color: #2563eb; background: #eff6ff; }
+    .file-drop-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+    .file-drop h3 { font-size: 16px; margin-bottom: 8px; }
+    .file-drop p { color: #6b7280; font-size: 14px; }
+    .file-drop input { display: none; }
+
+    .url-input-group { display: flex; gap: 12px; }
+    .url-input-group input { flex: 1; }
+
+    .settings-row { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb; align-items: flex-end; }
+    .settings-row .form-group { flex: 0 0 auto; margin-bottom: 0; }
+    .settings-row input[type="date"],
+    .settings-row input[type="time"],
+    .settings-row input[type="number"],
+    .settings-row select { height: 44px; padding: 0 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; width: auto; }
+    .settings-row input[type="date"] { width: 150px; }
+    .settings-row input[type="time"] { width: 120px; }
+    .settings-row .speed-input-group input[type="number"] { width: 70px; }
+    @media (max-width: 768px) { .settings-row { flex-direction: column; align-items: stretch; } .settings-row .form-group { width: 100%; } .settings-row input, .settings-row select { width: 100% !important; } }
+
+    .map-container { height: 500px; border-radius: 12px; overflow: hidden; margin-bottom: 0; position: relative; }
+    #map { height: 100%; width: 100%; }
+    .map-legend { position: absolute; bottom: 20px; left: 20px; background: white; padding: 12px 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 1000; font-size: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .legend-item:last-child { margin-bottom: 0; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+
+    .elevation-profile { background: white; border-radius: 0 0 12px 12px; padding: 16px; margin-bottom: 24px; border-top: 1px solid #e5e7eb; }
+    .elevation-profile h4 { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .elevation-chart { position: relative; height: 120px; cursor: crosshair; }
+    .elevation-canvas { width: 100%; height: 100%; }
+    .elevation-tooltip { position: absolute; background: #1a1a1a; color: white; padding: 6px 10px; border-radius: 6px; font-size: 12px; pointer-events: none; white-space: nowrap; transform: translateX(-50%); z-index: 10; }
+    .elevation-hover-dot { position: absolute; width: 10px; height: 10px; background: #ef4444; border: 2px solid white; border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 9; }
+    .elevation-stats { display: flex; gap: 24px; margin-top: 12px; font-size: 12px; color: #6b7280; }
+    .elevation-stats span { display: flex; align-items: center; gap: 4px; }
+
+    .results-section { padding: 40px 0; }
+    .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+    .results-tabs { display: flex; gap: 8px; }
+    .tab { padding: 10px 20px; background: transparent; border: none; cursor: pointer; font-size: 14px; font-weight: 500; color: #6b7280; border-radius: 8px; transition: all 0.2s; }
+    .tab.active { background: #2563eb; color: white; }
+    .tab:hover:not(.active) { background: #f3f4f6; }
+
+    .timeline { position: relative; padding-left: 40px; }
+    .timeline::before { content: ''; position: absolute; left: 15px; top: 0; bottom: 0; width: 2px; background: #e5e7eb; }
+    .timeline-item { position: relative; padding: 12px 0; }
+    .timeline-item.planned-stop .timeline-content { background: #fef3c7; border: 1px solid #fcd34d; }
+    .timeline-marker { position: absolute; left: -33px; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; background: white; border: 2px solid #e5e7eb; }
+    .timeline-marker.water { background: #dbeafe; border-color: #2563eb; }
+    .timeline-marker.camp { background: #dcfce7; border-color: #16a34a; }
+    .timeline-marker.food { background: #fef3c7; border-color: #d97706; }
+    .timeline-marker.scenic { background: #f3e8ff; border-color: #9333ea; }
+    .timeline-marker.store { background: #e0f2fe; border-color: #0284c7; }
+    .timeline-marker.start { background: #16a34a; border-color: #16a34a; color: white; }
+    .timeline-marker.end { background: #dc2626; border-color: #dc2626; color: white; }
+
+    .timeline-content { background: white; padding: 14px 18px; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .timeline-time { font-size: 12px; color: #6b7280; margin-bottom: 2px; font-weight: 500; }
+    .timeline-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+    .timeline-meta { font-size: 13px; color: #6b7280; display: flex; flex-wrap: wrap; gap: 12px; }
+    .timeline-meta span { display: flex; align-items: center; gap: 4px; }
+    .timeline-actions { margin-top: 10px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+    .detour-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background: #fef3c7; color: #92400e; border-radius: 4px; font-size: 11px; font-weight: 500; }
+    .detour-badge.far { background: #fee2e2; color: #991b1b; }
+
+    .stop-time-input { display: inline-flex; align-items: center; gap: 6px; background: #f3f4f6; padding: 4px 8px; border-radius: 6px; }
+    .stop-time-input input { width: 50px; padding: 4px 6px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; text-align: center; }
+    .stop-time-input span { font-size: 12px; color: #6b7280; }
+
+    .planned-stop-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; background: #fcd34d; color: #78350f; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .possible-stop-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; background: #dbeafe; color: #1e40af; border-radius: 12px; font-size: 11px; font-weight: 600; }
+
+    .selected-stops-summary { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-top: 12px; }
+    .selected-stops-summary h4 { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 12px; }
+    .selected-stop-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f9fafb; border-radius: 8px; margin-bottom: 8px; font-size: 13px; }
+    .selected-stop-item:last-child { margin-bottom: 0; }
+    .selected-stop-item.planned { background: #fffbeb; border: 1px solid #fcd34d; }
+    .selected-stop-item.possible { background: #eff6ff; border: 1px solid #bfdbfe; }
+    .selected-stop-info { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+    .selected-stop-name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+    .selected-stop-meta { color: #6b7280; font-size: 12px; }
+    .selected-stop-remove { background: none; border: none; color: #9ca3af; cursor: pointer; padding: 4px; border-radius: 4px; }
+    .selected-stop-remove:hover { background: #fee2e2; color: #dc2626; }
+
+    .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .resource-card { padding: 20px; position: relative; }
+    .resource-card.planned-stop { background: #fffbeb; border: 1px solid #fcd34d; }
+    .resource-card.possible-stop { background: #eff6ff; border: 1px solid #bfdbfe; }
+
+    .stop-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+    .stop-btn { padding: 4px 10px; font-size: 11px; border-radius: 6px; border: 1px solid #d1d5db; background: white; cursor: pointer; transition: all 0.2s; }
+    .stop-btn:hover { border-color: #9ca3af; }
+    .stop-btn.planned { background: #fef3c7; border-color: #fcd34d; color: #78350f; }
+    .stop-btn.possible { background: #dbeafe; border-color: #93c5fd; color: #1e40af; }
+
+    .detour-filter { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #f9fafb; border-radius: 8px; margin-top: 12px; }
+    .detour-filter label { font-size: 13px; font-weight: 500; color: #374151; white-space: nowrap; }
+    .detour-filter select { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+    .detour-filter .refresh-btn { padding: 6px 12px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; }
+    .detour-filter .refresh-btn:hover { background: #1d4ed8; }
+
+    .location-text { font-size: 11px; color: #6b7280; font-style: italic; }
+    .resource-card-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+    .resource-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .resource-icon.water { background: #dbeafe; }
+    .resource-icon.camp { background: #dcfce7; }
+    .resource-icon.food { background: #fef3c7; }
+    .resource-icon.scenic { background: #f3e8ff; }
+    .resource-icon.store { background: #e0f2fe; }
+    .resource-name { font-weight: 600; font-size: 15px; line-height: 1.3; }
+    .resource-type { font-size: 12px; color: #6b7280; text-transform: capitalize; margin-top: 2px; }
+    .resource-details { font-size: 13px; color: #4b5563; }
+    .resource-details p { margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+    .resource-link { color: #2563eb; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 4px; margin-right: 12px; }
+    .resource-link:hover { text-decoration: underline; }
+    .resource-link.gmaps { color: #16a34a; }
+
+    .stats-bar { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-bottom: 32px; }
+    @media (max-width: 1000px) { .stats-bar { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 600px) { .stats-bar { grid-template-columns: repeat(2, 1fr); } }
+    .stat-card { padding: 20px; text-align: center; }
+    .stat-value { font-size: 28px; font-weight: 700; color: #1a1a1a; }
+    .stat-label { font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+    .stat-card.highlight { background: #fffbeb; border: 1px solid #fcd34d; }
+
+    .filter-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+    .pill { padding: 8px 16px; border-radius: 20px; border: 1px solid #e5e7eb; background: white; cursor: pointer; font-size: 13px; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+    .pill.active { background: #1a1a1a; color: white; border-color: #1a1a1a; }
+    .pill:hover:not(.active) { border-color: #9ca3af; }
+    .pill-count { background: rgba(0,0,0,0.1); padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+    .pill.active .pill-count { background: rgba(255,255,255,0.2); }
+
+    .export-panel { position: fixed; bottom: 24px; right: 24px; z-index: 200; }
+    .export-dropdown { position: absolute; bottom: 100%; right: 0; margin-bottom: 8px; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 8px; min-width: 220px; display: none; }
+    .export-dropdown.open { display: block; }
+    .export-option { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+    .export-option:hover { background: #f3f4f6; }
+    .export-option-icon { width: 32px; height: 32px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+
+    .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+    .spinner { width: 48px; height: 48px; border: 3px solid #e5e7eb; border-top-color: #2563eb; border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { margin-top: 16px; font-size: 15px; color: #6b7280; }
+    .loading-steps { margin-top: 24px; text-align: left; }
+    .loading-step { display: flex; align-items: center; gap: 12px; padding: 8px 0; color: #9ca3af; font-size: 14px; }
+    .loading-step.active { color: #1a1a1a; }
+    .loading-step.done { color: #16a34a; }
+    .loading-step-icon { width: 20px; text-align: center; }
+
+    .empty-state { text-align: center; padding: 80px 40px; }
+    .empty-state h3 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+    .empty-state p { color: #6b7280; max-width: 400px; margin: 0 auto; }
+
+    .alert { padding: 16px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 12px; }
+    .alert-info { background: #eff6ff; color: #1e40af; }
+    .alert-warning { background: #fef3c7; color: #92400e; }
+    .alert-error { background: #fee2e2; color: #991b1b; }
+    .alert-icon { font-size: 18px; flex-shrink: 0; }
+    .alert-content { flex: 1; }
+    .alert-title { font-weight: 600; margin-bottom: 4px; }
+    .alert-text { font-size: 14px; opacity: 0.9; }
+
+    .leaflet-popup-content-wrapper { border-radius: 10px; }
+    .leaflet-popup-content { margin: 12px 16px; }
+    .popup-title { font-weight: 600; margin-bottom: 4px; }
+    .popup-meta { font-size: 12px; color: #6b7280; margin-bottom: 2px; }
+    .popup-links { margin-top: 8px; display: flex; gap: 12px; }
+    .popup-link { color: #2563eb; font-size: 12px; text-decoration: none; }
+    .popup-link:hover { text-decoration: underline; }
+    .popup-link.gmaps { color: #16a34a; }
+
+    .route-info { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 16px 20px; border-radius: 10px; margin-bottom: 24px; }
+    .route-info-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .route-info-icon { font-size: 24px; }
+    .route-info h3 { font-size: 16px; font-weight: 600; color: #166534; }
+    .route-info p { font-size: 14px; color: #166534; opacity: 0.8; }
+
+    .history-section { margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb; }
+    .history-section h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #374151; }
+    .history-list { display: grid; gap: 12px; }
+    .history-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: #f9fafb; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+    .history-item:hover { background: #f3f4f6; }
+    .history-item-info { flex: 1; }
+    .history-item-name { font-weight: 500; font-size: 14px; margin-bottom: 2px; }
+    .history-item-meta { font-size: 12px; color: #6b7280; }
+    .history-item-actions { display: flex; gap: 8px; }
+    .history-delete { padding: 6px; border: none; background: transparent; cursor: pointer; color: #9ca3af; border-radius: 4px; }
+    .history-delete:hover { background: #fee2e2; color: #dc2626; }
+
+    .planned-stops-summary { background: #fffbeb; border: 1px solid #fcd34d; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .planned-stops-summary-text { font-size: 14px; color: #78350f; }
+    .planned-stops-summary-text strong { font-weight: 600; }
+
+    .mile-marker-icon {
+      background: white;
+      border: 2px solid #6b7280;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #374151;
+      white-space: nowrap;
+    }
+
+    .speed-input-group { display: flex; align-items: center; gap: 8px; }
+    .speed-input-group input[type="number"] { width: 70px; height: 44px; padding: 0 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; text-align: center; }
+    .speed-input-group input[type="number"]:focus { outline: none; border-color: #2563eb; }
+    .speed-input-group span { font-size: 13px; color: #6b7280; }
+
+    .route-controls { background: #f9fafb; border-radius: 10px; padding: 16px; margin-bottom: 24px; display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+    .route-controls .form-group { margin-bottom: 0; flex: 0 0 auto; }
+    .route-controls input[type="date"],
+    .route-controls input[type="time"],
+    .route-controls input[type="number"],
+    .route-controls select { height: 44px; padding: 0 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
+    .route-controls input[type="date"] { width: 140px; }
+    .route-controls input[type="time"] { width: 110px; }
+    .route-controls select { width: 100px; }
+    .route-controls .speed-input-group input[type="number"] { width: 70px; }
+    .route-controls .refresh-btn { height: 44px; padding: 0 20px; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+    .route-controls .refresh-btn:hover { background: #1d4ed8; }
+
+    .condensed-timeline { padding-left: 20px; }
+    .condensed-timeline .mile-marker-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px dashed #e5e7eb; }
+    .condensed-timeline .mile-marker-row .mile-label { font-weight: 600; color: #374151; min-width: 60px; font-size: 13px; }
+    .condensed-timeline .mile-marker-row .eta-label { color: #6b7280; font-size: 12px; min-width: 70px; }
+    .condensed-timeline .stops-in-range { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
+    .condensed-timeline .mini-stop { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; background: white; border: 1px solid #e5e7eb; border-radius: 12px; font-size: 11px; cursor: pointer; transition: all 0.2s; }
+    .condensed-timeline .mini-stop:hover { border-color: #9ca3af; background: #f3f4f6; }
+    .condensed-timeline .mini-stop.planned { background: #fef3c7; border-color: #fcd34d; }
+    .condensed-timeline .mini-stop.possible { background: #dbeafe; border-color: #93c5fd; }
+
+    .condensed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+    .condensed-grid .mini-card { padding: 10px 12px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+    .condensed-grid .mini-card:hover { border-color: #9ca3af; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .condensed-grid .mini-card.planned { background: #fffbeb; border-color: #fcd34d; }
+    .condensed-grid .mini-card.possible { background: #eff6ff; border-color: #bfdbfe; }
+    .condensed-grid .mini-card-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .condensed-grid .mini-card-name { font-weight: 500; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .condensed-grid .mini-card-meta { font-size: 10px; color: #6b7280; }
+    .condensed-grid .mini-card-hours { font-size: 10px; color: #16a34a; margin-top: 2px; }
+    .condensed-grid .mini-card-hours.closed { color: #dc2626; }
+
+    .hours-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
+    .hours-badge.open { background: #dcfce7; color: #166534; }
+    .hours-badge.closed { background: #fee2e2; color: #991b1b; }
+    .hours-badge.unknown { background: #f3f4f6; color: #6b7280; }
+
+    .view-toggle { display: flex; gap: 4px; background: #f3f4f6; padding: 3px; border-radius: 6px; }
+    .view-toggle button { padding: 4px 10px; border: none; background: transparent; cursor: pointer; font-size: 12px; color: #6b7280; border-radius: 4px; }
+    .view-toggle button.active { background: white; color: #1a1a1a; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:system-ui;">
+      <div style="text-align:center;">
+        <div style="font-size:24px;margin-bottom:16px;">Loading RouteScout...</div>
+        <div style="color:#666;">If this takes more than a few seconds, check browser console for errors.</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/babel">
+    console.log('RouteScout: Script started loading...');
+    const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+    // Error Boundary for debugging
+    class ErrorBoundary extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = { hasError: false, error: null };
+      }
+      static getDerivedStateFromError(error) {
+        return { hasError: true, error };
+      }
+      componentDidCatch(error, info) {
+        console.error('RouteScout Error:', error, info);
+      }
+      render() {
+        if (this.state.hasError) {
+          return (
+            <div style={{ padding: '40px', textAlign: 'center', fontFamily: 'system-ui' }}>
+              <h2 style={{ color: '#dc2626' }}>Something went wrong</h2>
+              <p style={{ color: '#666' }}>{this.state.error?.message || 'Unknown error'}</p>
+              <pre style={{ textAlign: 'left', background: '#f3f4f6', padding: '16px', borderRadius: '8px', overflow: 'auto', maxWidth: '600px', margin: '20px auto' }}>
+                {this.state.error?.stack}
+              </pre>
+              <button onClick={() => window.location.reload()} style={{ padding: '12px 24px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+                Reload Page
+              </button>
+            </div>
+          );
+        }
+        return this.props.children;
+      }
+    }
+
+    // Constants
+    const MAX_PLANNED_STOPS = 25;
+    const HISTORY_KEY = 'routescout_history';
+    const MAX_HISTORY_ITEMS = 10;
+    const UNITS_KEY = 'routescout_units';
+
+    // Icons
+    const Icons = {
+      Bike: () => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="5" cy="17" r="3"/><circle cx="19" cy="17" r="3"/>
+          <path d="M12 17V5l4 4M8 8h4"/>
+        </svg>
+      ),
+      Upload: () => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+        </svg>
+      ),
+      Link: () => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
+          <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+        </svg>
+      ),
+      History: () => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+      ),
+      Download: () => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+        </svg>
+      ),
+      Trash: () => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+        </svg>
+      ),
+      ExternalLink: () => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
+          <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
+        </svg>
+      ),
+      Mountain: () => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+          <path d="M8 3l4 8 5-5 5 15H2L8 3z"/>
+        </svg>
+      ),
+      Water: () => <span>💧</span>,
+      Camp: () => <span>⛺</span>,
+      Food: () => <span>🍴</span>,
+      Scenic: () => <span>📸</span>,
+      Store: () => <span>🏪</span>,
+    };
+
+    // POI Categories with OSM tags (excluding picnic_site from camp)
+    // Note: Fuel/gas stations merged into Convenience category since this is a cycling app
+    const POI_CATEGORIES = {
+      water: {
+        label: 'Water',
+        icon: Icons.Water,
+        color: '#2563eb',
+        bgColor: '#dbeafe',
+        osmTags: [
+          'amenity=drinking_water',
+          'amenity=water_point',
+          'natural=spring',
+          'man_made=water_tap'
+        ]
+      },
+      camp: {
+        label: 'Camping',
+        icon: Icons.Camp,
+        color: '#16a34a',
+        bgColor: '#dcfce7',
+        osmTags: [
+          'tourism=camp_site',
+          'tourism=caravan_site',
+          'tourism=wilderness_hut'
+        ],
+        excludeTags: ['shelter_type=picnic_shelter', 'tourism=picnic_site']
+      },
+      food: {
+        label: 'Food',
+        icon: Icons.Food,
+        color: '#d97706',
+        bgColor: '#fef3c7',
+        osmTags: [
+          'amenity=restaurant',
+          'amenity=cafe',
+          'amenity=fast_food',
+          'amenity=pub',
+          'amenity=bar'
+        ]
+      },
+      store: {
+        label: 'Convenience',
+        icon: Icons.Store,
+        color: '#0284c7',
+        bgColor: '#e0f2fe',
+        osmTags: [
+          'shop=supermarket',
+          'shop=convenience',
+          'shop=general',
+          'shop=grocery',
+          'amenity=fuel'
+        ]
+      },
+      scenic: {
+        label: 'Scenic',
+        icon: Icons.Scenic,
+        color: '#9333ea',
+        bgColor: '#f3e8ff',
+        osmTags: [
+          'tourism=viewpoint',
+          'tourism=attraction',
+          'natural=peak',
+          'natural=waterfall',
+          'historic=monument'
+        ]
+      }
+    };
+
+    // Unit conversion helpers
+    const kmToMi = (km) => km * 0.621371;
+    const miToKm = (mi) => mi / 0.621371;
+    const mToFt = (m) => m * 3.28084;
+    const ftToM = (ft) => ft / 3.28084;
+
+    // History management
+    const getHistory = () => {
+      try {
+        const data = localStorage.getItem(HISTORY_KEY);
+        return data ? JSON.parse(data) : [];
+      } catch {
+        return [];
+      }
+    };
+
+    const saveToHistory = (route, pois) => {
+      try {
+        const history = getHistory();
+        const entry = {
+          id: Date.now(),
+          name: route.name,
+          distance: route.distance,
+          elevation: route.elevation,
+          poiCount: pois.length,
+          date: new Date().toISOString(),
+          routeData: route,
+          poisData: pois.map(p => ({
+            ...p,
+            eta: null
+          }))
+        };
+
+        const filtered = history.filter(h => h.name !== route.name);
+        const updated = [entry, ...filtered].slice(0, MAX_HISTORY_ITEMS);
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+        return updated;
+      } catch (e) {
+        console.error('Failed to save history:', e);
+        return getHistory();
+      }
+    };
+
+    const deleteFromHistory = (id) => {
+      try {
+        const history = getHistory();
+        const updated = history.filter(h => h.id !== id);
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+        return updated;
+      } catch {
+        return getHistory();
+      }
+    };
+
+    // GPX Parser - optimized for large files
+    const parseGPX = (gpxText) => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(gpxText, 'text/xml');
+
+      const nameEl = doc.querySelector('name');
+      const name = nameEl ? nameEl.textContent : 'Unnamed Route';
+
+      const trkpts = doc.querySelectorAll('trkpt');
+      const rtepts = doc.querySelectorAll('rtept');
+      const points = trkpts.length > 0 ? trkpts : rtepts;
+      const totalPoints = points.length;
+
+      // For very large files, we'll downsample to ~2000 points max for performance
+      // while keeping all points for accurate distance/elevation calculation
+      const MAX_DISPLAY_POINTS = 2000;
+      const sampleRate = totalPoints > MAX_DISPLAY_POINTS ? Math.ceil(totalPoints / MAX_DISPLAY_POINTS) : 1;
+
+      const allCoordinates = []; // Full resolution for distance calc
+      const displayCoordinates = []; // Downsampled for rendering
+      let totalElevationGain = 0;
+      let prevEle = null;
+      let prevLat = null;
+      let prevLon = null;
+      let cumulativeDistance = 0;
+
+      // Pre-calculate constants
+      const DEG_TO_RAD = Math.PI / 180;
+      const R = 6371; // km
+
+      for (let idx = 0; idx < totalPoints; idx++) {
+        const pt = points[idx];
+        const lat = parseFloat(pt.getAttribute('lat'));
+        const lon = parseFloat(pt.getAttribute('lon'));
+        const eleEl = pt.querySelector('ele');
+        const ele = eleEl ? parseFloat(eleEl.textContent) : null;
+
+        if (isNaN(lat) || isNaN(lon)) continue;
+
+        // Calculate cumulative distance
+        if (prevLat !== null) {
+          const dLat = (lat - prevLat) * DEG_TO_RAD;
+          const dLon = (lon - prevLon) * DEG_TO_RAD;
+          const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(prevLat * DEG_TO_RAD) * Math.cos(lat * DEG_TO_RAD) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          cumulativeDistance += R * c;
+        }
+
+        // Track elevation gain
+        if (ele !== null && prevEle !== null && ele > prevEle) {
+          totalElevationGain += (ele - prevEle);
+        }
+
+        // Store for display (downsampled) - always include first and last
+        if (idx % sampleRate === 0 || idx === totalPoints - 1) {
+          displayCoordinates.push([lat, lon, ele, cumulativeDistance]);
+        }
+
+        prevLat = lat;
+        prevLon = lon;
+        prevEle = ele;
+      }
+
+      console.log(`GPX parsed: ${totalPoints} points -> ${displayCoordinates.length} display points`);
+
+      return {
+        name,
+        coordinates: displayCoordinates,
+        distance: cumulativeDistance,
+        elevation: totalElevationGain,
+        totalPoints
+      };
+    };
+
+    // Calculate distance between two points in meters
+    const haversineDistance = (lat1, lon1, lat2, lon2) => {
+      const R = 6371000;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    };
+
+    // Find minimum distance from POI to route - optimized with spatial indexing
+    const findDistanceOffRoute = (poiLat, poiLon, routeCoords, spatialIndex = null) => {
+      // If we have a spatial index, use it for faster lookup
+      if (spatialIndex) {
+        const gridKey = `${Math.floor(poiLat * 10)},${Math.floor(poiLon * 10)}`;
+        const nearbyIndices = spatialIndex[gridKey] || [];
+
+        // Also check adjacent cells
+        const adjacentKeys = [
+          `${Math.floor(poiLat * 10) - 1},${Math.floor(poiLon * 10)}`,
+          `${Math.floor(poiLat * 10) + 1},${Math.floor(poiLon * 10)}`,
+          `${Math.floor(poiLat * 10)},${Math.floor(poiLon * 10) - 1}`,
+          `${Math.floor(poiLat * 10)},${Math.floor(poiLon * 10) + 1}`,
+        ];
+
+        const indicesToCheck = [...nearbyIndices];
+        adjacentKeys.forEach(key => {
+          if (spatialIndex[key]) indicesToCheck.push(...spatialIndex[key]);
+        });
+
+        if (indicesToCheck.length > 0) {
+          let minDist = Infinity;
+          let closestIdx = 0;
+
+          indicesToCheck.forEach(idx => {
+            const [lat, lon] = routeCoords[idx];
+            const dist = haversineDistance(poiLat, poiLon, lat, lon);
+            if (dist < minDist) {
+              minDist = dist;
+              closestIdx = idx;
+            }
+          });
+
+          return { distanceMeters: minDist, closestIdx };
+        }
+      }
+
+      // Fallback: sample route points for performance (every 10th point for large routes)
+      const sampleRate = routeCoords.length > 500 ? Math.ceil(routeCoords.length / 200) : 1;
+
+      let minDist = Infinity;
+      let closestIdx = 0;
+
+      for (let idx = 0; idx < routeCoords.length; idx += sampleRate) {
+        const [lat, lon] = routeCoords[idx];
+        const dist = haversineDistance(poiLat, poiLon, lat, lon);
+        if (dist < minDist) {
+          minDist = dist;
+          closestIdx = idx;
+        }
+      }
+
+      // Refine search around the closest point
+      const searchStart = Math.max(0, closestIdx - sampleRate);
+      const searchEnd = Math.min(routeCoords.length - 1, closestIdx + sampleRate);
+
+      for (let idx = searchStart; idx <= searchEnd; idx++) {
+        const [lat, lon] = routeCoords[idx];
+        const dist = haversineDistance(poiLat, poiLon, lat, lon);
+        if (dist < minDist) {
+          minDist = dist;
+          closestIdx = idx;
+        }
+      }
+
+      return { distanceMeters: minDist, closestIdx };
+    };
+
+    // Build spatial index for route coordinates
+    const buildSpatialIndex = (routeCoords) => {
+      const index = {};
+      routeCoords.forEach(([lat, lon], idx) => {
+        const key = `${Math.floor(lat * 10)},${Math.floor(lon * 10)}`;
+        if (!index[key]) index[key] = [];
+        index[key].push(idx);
+      });
+      return index;
+    };
+
+    // Overpass API Query Builder - optimized for long routes
+    const buildOverpassQuery = (coordinates, categories, radius = 1500) => {
+      // For long routes, we need to sample intelligently
+      // Use cumulative distance from coordinates (4th element) if available
+      const totalDist = coordinates[coordinates.length - 1]?.[3] || 0;
+
+      // Sample every ~5km along the route, max 60 points for good coverage
+      // Increased radius to 1500m to catch POIs in nearby towns
+      const targetSampleKm = 5;
+      const maxSamplePoints = 60;
+
+      let samplePoints = [];
+
+      if (totalDist > 0) {
+        // Use distance-based sampling
+        const sampleInterval = Math.max(targetSampleKm, totalDist / maxSamplePoints);
+        let nextSampleDist = 0;
+
+        for (let i = 0; i < coordinates.length; i++) {
+          const dist = coordinates[i][3] || 0;
+          if (dist >= nextSampleDist || i === 0) {
+            samplePoints.push(coordinates[i]);
+            nextSampleDist = dist + sampleInterval;
+          }
+        }
+
+        // Always include last point
+        if (samplePoints[samplePoints.length - 1] !== coordinates[coordinates.length - 1]) {
+          samplePoints.push(coordinates[coordinates.length - 1]);
+        }
+      } else {
+        // Fallback: uniform sampling by index
+        const step = Math.max(1, Math.floor(coordinates.length / maxSamplePoints));
+        samplePoints = coordinates.filter((_, i) => i % step === 0 || i === coordinates.length - 1);
+      }
+
+      // Limit to max points
+      if (samplePoints.length > maxSamplePoints) {
+        const step = Math.ceil(samplePoints.length / maxSamplePoints);
+        samplePoints = samplePoints.filter((_, i) => i % step === 0 || i === samplePoints.length - 1);
+      }
+
+      const coordStr = samplePoints.map(([lat, lon]) => `${lat.toFixed(5)},${lon.toFixed(5)}`).join(',');
+
+      console.log(`Overpass query: ${samplePoints.length} sample points for ${totalDist.toFixed(1)}km route (radius: 1500m, interval: ~${(totalDist / samplePoints.length).toFixed(1)}km)`);
+
+      // Log sample point distribution for debugging
+      if (samplePoints.length > 0) {
+        const firstPt = samplePoints[0];
+        const lastPt = samplePoints[samplePoints.length - 1];
+        console.log(`Sample coverage: (${firstPt[0].toFixed(3)}, ${firstPt[1].toFixed(3)}) to (${lastPt[0].toFixed(3)}, ${lastPt[1].toFixed(3)})`);
+      }
+
+      const tagQueries = [];
+      Object.entries(categories).forEach(([cat, config]) => {
+        config.osmTags.forEach(tag => {
+          const [key, value] = tag.split('=');
+          tagQueries.push(`node["${key}"="${value}"](around:${radius},${coordStr});`);
+          tagQueries.push(`way["${key}"="${value}"](around:${radius},${coordStr});`);
+        });
+      });
+
+      return `[out:json][timeout:90];(${tagQueries.join('')});out center;`;
+    };
+
+    // Fetch POIs from Overpass API with timeout and retry
+    const fetchPOIs = async (coordinates, onProgress, categoriesToSearch = null, retryCount = 0) => {
+      // Filter categories to only those requested
+      const categories = categoriesToSearch
+        ? Object.fromEntries(Object.entries(POI_CATEGORIES).filter(([key]) => categoriesToSearch.includes(key)))
+        : POI_CATEGORIES;
+      const query = buildOverpassQuery(coordinates, categories);
+      onProgress?.('Querying OpenStreetMap...');
+
+      console.log('Overpass query length:', query.length, 'chars');
+
+      // Create abort controller for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
+
+      let response;
+      try {
+        // Use different Overpass endpoints to avoid caching issues
+        const endpoints = [
+          'https://overpass-api.de/api/interpreter',
+          'https://overpass.kumi.systems/api/interpreter',
+          'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
+        ];
+        const endpoint = endpoints[retryCount % endpoints.length];
+
+        console.log(`Fetching from ${endpoint}...`);
+
+        response = await fetch(endpoint, {
+          method: 'POST',
+          body: query,
+          headers: { 'Content-Type': 'text/plain' },
+          signal: controller.signal
+        });
+      } catch (fetchErr) {
+        clearTimeout(timeoutId);
+        if (fetchErr.name === 'AbortError') {
+          throw new Error('OpenStreetMap query timed out. The route may be too long or the server is busy. Try again later.');
+        }
+        // Retry once on network error
+        if (retryCount < 2) {
+          console.log('Network error, retrying...', fetchErr.message);
+          await new Promise(r => setTimeout(r, 1000));
+          return fetchPOIs(coordinates, onProgress, categoriesToSearch, retryCount + 1);
+        }
+        throw fetchErr;
+      }
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        if (response.status === 429 || response.status === 504) {
+          // Rate limited or timeout - retry with different endpoint
+          if (retryCount < 2) {
+            console.log(`Server returned ${response.status}, retrying with different endpoint...`);
+            await new Promise(r => setTimeout(r, 2000));
+            return fetchPOIs(coordinates, onProgress, categoriesToSearch, retryCount + 1);
+          }
+          throw new Error('OpenStreetMap servers are busy. Please wait a minute and try again.');
+        }
+        throw new Error(`Failed to fetch POIs from OpenStreetMap (${response.status})`);
+      }
+
+      const data = await response.json();
+      console.log(`Overpass returned ${data.elements?.length || 0} raw elements`);
+      onProgress?.('Processing POI data...');
+
+      // Build spatial index for faster lookups
+      const spatialIndex = buildSpatialIndex(coordinates);
+
+      const pois = [];
+
+      data.elements.forEach(el => {
+        const lat = el.lat || el.center?.lat;
+        const lon = el.lon || el.center?.lon;
+        if (!lat || !lon) return;
+
+        const tags = el.tags || {};
+
+        const isPicnicShelter = tags.shelter_type === 'picnic_shelter' ||
+                                tags.tourism === 'picnic_site' ||
+                                (tags.amenity === 'shelter' && tags.shelter_type !== 'basic_hut');
+
+        let category = null;
+        let type = '';
+
+        for (const [cat, config] of Object.entries(POI_CATEGORIES)) {
+          if (cat === 'camp' && isPicnicShelter) continue;
+
+          for (const osmTag of config.osmTags) {
+            const [key, value] = osmTag.split('=');
+            if (tags[key] === value) {
+              category = cat;
+              type = value.replace(/_/g, ' ');
+              break;
+            }
+          }
+          if (category) break;
+        }
+
+        if (!category) return;
+
+        const name = tags.name || tags['name:en'] || `Unnamed ${type}`;
+
+        // Try to get location from OSM address tags
+        const city = tags['addr:city'] || tags['addr:town'] || tags['addr:village'] || '';
+        const state = tags['addr:state'] || '';
+        const location = city && state ? `${city}, ${state}` : (city || state || null);
+
+        const { distanceMeters, closestIdx } = findDistanceOffRoute(lat, lon, coordinates, spatialIndex);
+        const progressRatio = closestIdx / (coordinates.length - 1);
+
+        // Extract opening hours from OSM tags
+        const openingHours = tags.opening_hours || tags['opening_hours:covid19'] || null;
+
+        pois.push({
+          id: el.id,
+          name,
+          type,
+          category,
+          coordinates: [lat, lon],
+          progressRatio,
+          distanceOffRoute: Math.round(distanceMeters),
+          location,
+          openingHours,
+          tags,
+          osmId: el.id,
+          osmType: el.type
+        });
+      });
+
+      console.log(`Found ${pois.length} POIs before deduplication`);
+
+      const seen = new Set();
+      const dedupedPois = pois.filter(poi => {
+        const key = `${poi.name}-${poi.coordinates[0].toFixed(4)}-${poi.coordinates[1].toFixed(4)}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      // Fetch locations for POIs that don't have location from OSM tags
+      // Limit to avoid rate limiting - batch geocode only POIs without location
+      const poisWithoutLocation = dedupedPois.filter(p => !p.location);
+      if (poisWithoutLocation.length > 0) {
+        onProgress?.(`Getting location info for ${Math.min(poisWithoutLocation.length, 20)} resources...`);
+
+        // Only geocode up to 20 POIs to avoid rate limiting
+        const toGeocode = poisWithoutLocation.slice(0, 20);
+        await Promise.all(
+          toGeocode.map(async (poi, idx) => {
+            // Stagger requests to avoid rate limiting
+            await new Promise(r => setTimeout(r, idx * 200));
+            const loc = await reverseGeocode(poi.coordinates[0], poi.coordinates[1]);
+            if (loc) poi.location = loc;
+          })
+        );
+      }
+
+      return dedupedPois;
+    };
+
+    // Calculate POI details with planned stops and possible stops
+    const enrichPOIs = (pois, routeDistance, startTime, avgSpeed, plannedStops = {}, possibleStops = {}) => {
+      const sorted = [...pois].sort((a, b) => a.progressRatio - b.progressRatio);
+      let accumulatedStopTime = 0;
+
+      return sorted.map(poi => {
+        const distanceKm = poi.progressRatio * routeDistance;
+        const ridingHours = distanceKm / avgSpeed;
+        const totalHours = ridingHours + (accumulatedStopTime / 60);
+        const eta = new Date(startTime.getTime() + totalHours * 60 * 60 * 1000);
+        const stopMinutes = plannedStops[poi.id] || 0;
+        const isPossibleStop = possibleStops[poi.id] === true;
+
+        if (stopMinutes > 0) {
+          accumulatedStopTime += stopMinutes;
+        }
+
+        // Parse opening hours relative to ETA
+        const hoursInfo = parseOpeningHours(poi.openingHours, eta);
+
+        return {
+          ...poi,
+          distanceKm,
+          hoursFromStart: totalHours,
+          eta,
+          isPlannedStop: stopMinutes > 0,
+          isPossibleStop,
+          isSelected: stopMinutes > 0 || isPossibleStop, // Either type of selection
+          stopMinutes,
+          hoursInfo // { raw, isOpen, display }
+        };
+      });
+    };
+
+    // Reverse geocode to get town/state (using Nominatim)
+    const reverseGeocode = async (lat, lon) => {
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=10`,
+          { headers: { 'User-Agent': 'RouteScout/1.0' } }
+        );
+        if (!response.ok) return null;
+        const data = await response.json();
+        const address = data.address || {};
+        const city = address.city || address.town || address.village || address.hamlet || '';
+        const state = address.state || '';
+        return city && state ? `${city}, ${state}` : (city || state || null);
+      } catch {
+        return null;
+      }
+    };
+
+    // Format helpers
+    const formatTime = (date) => date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    const formatDate = (date) => date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+    // Parse OSM opening_hours and check if open at given time
+    const parseOpeningHours = (hoursString, checkTime = new Date()) => {
+      if (!hoursString) return { raw: null, isOpen: null, display: null };
+
+      // Handle common simple formats
+      if (hoursString === '24/7') {
+        return { raw: hoursString, isOpen: true, display: '24/7' };
+      }
+
+      // Days of week mapping
+      const dayMap = { 'Mo': 1, 'Tu': 2, 'We': 3, 'Th': 4, 'Fr': 5, 'Sa': 6, 'Su': 0 };
+      const dayOfWeek = checkTime.getDay();
+      const currentTime = checkTime.getHours() * 60 + checkTime.getMinutes();
+
+      try {
+        // Split by semicolon for different day ranges
+        const rules = hoursString.split(';').map(r => r.trim());
+        let isOpen = null;
+        let todayHours = null;
+
+        for (const rule of rules) {
+          // Match patterns like "Mo-Fr 08:00-18:00" or "Sa 09:00-14:00"
+          const match = rule.match(/^([A-Za-z,-]+)\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})$/);
+          if (!match) continue;
+
+          const [, days, startStr, endStr] = match;
+
+          // Parse days range
+          let appliesToday = false;
+          if (days.includes('-')) {
+            const [startDay, endDay] = days.split('-');
+            const startIdx = dayMap[startDay];
+            const endIdx = dayMap[endDay];
+            if (startIdx !== undefined && endIdx !== undefined) {
+              if (startIdx <= endIdx) {
+                appliesToday = dayOfWeek >= startIdx && dayOfWeek <= endIdx;
+              } else {
+                // Wraps around (e.g., Fr-Mo)
+                appliesToday = dayOfWeek >= startIdx || dayOfWeek <= endIdx;
+              }
+            }
+          } else {
+            // Single days or comma-separated
+            const dayList = days.split(',');
+            appliesToday = dayList.some(d => dayMap[d.trim()] === dayOfWeek);
+          }
+
+          if (appliesToday) {
+            const [startH, startM] = startStr.split(':').map(Number);
+            const [endH, endM] = endStr.split(':').map(Number);
+            const startMins = startH * 60 + startM;
+            const endMins = endH * 60 + endM;
+
+            todayHours = `${startStr}-${endStr}`;
+            isOpen = currentTime >= startMins && currentTime < endMins;
+            break;
+          }
+        }
+
+        return {
+          raw: hoursString,
+          isOpen,
+          display: todayHours || hoursString.substring(0, 30) + (hoursString.length > 30 ? '...' : '')
+        };
+      } catch (e) {
+        // If parsing fails, just show the raw string
+        return { raw: hoursString, isOpen: null, display: hoursString.substring(0, 30) + (hoursString.length > 30 ? '...' : '') };
+      }
+    };
+
+    // Elevation Profile Component
+    function ElevationProfile({ routeData, pois, useMiles, onPointClick }) {
+      const canvasRef = useRef(null);
+      const containerRef = useRef(null);
+      const [tooltip, setTooltip] = useState(null);
+      const [dimensions, setDimensions] = useState({ width: 800, height: 120 });
+
+      const elevationData = useMemo(() => {
+        if (!routeData?.coordinates) return [];
+        // Sample every N points for performance
+        const step = Math.max(1, Math.floor(routeData.coordinates.length / 500));
+        return routeData.coordinates
+          .filter((_, i) => i % step === 0 || i === routeData.coordinates.length - 1)
+          .map((coord, idx, arr) => {
+            const [lat, lon, ele, dist] = coord;
+            // If no cumulative distance stored, estimate from index
+            const estimatedDist = dist !== undefined ? dist : (routeData.distance * idx / (arr.length - 1));
+            return {
+              lat, lon,
+              elevation: ele || 0,
+              distance: estimatedDist || 0
+            };
+          });
+      }, [routeData]);
+
+      const stats = useMemo(() => {
+        if (!elevationData.length) return { min: 0, max: 100, totalGain: 0, totalLoss: 0 };
+        const elevations = elevationData.map(d => d.elevation).filter(e => e > 0);
+        let gain = 0, loss = 0;
+        for (let i = 1; i < elevationData.length; i++) {
+          const diff = elevationData[i].elevation - elevationData[i-1].elevation;
+          if (diff > 0) gain += diff;
+          else loss += Math.abs(diff);
+        }
+        return {
+          min: Math.min(...elevations) || 0,
+          max: Math.max(...elevations) || 100,
+          totalGain: gain,
+          totalLoss: loss
+        };
+      }, [elevationData]);
+
+      useEffect(() => {
+        if (containerRef.current) {
+          const rect = containerRef.current.getBoundingClientRect();
+          setDimensions({ width: rect.width, height: 120 });
+        }
+      }, [routeData]);
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas || !elevationData.length) return;
+
+        const ctx = canvas.getContext('2d');
+        const { width, height } = dimensions;
+        const padding = { top: 10, right: 10, bottom: 25, left: 45 };
+        const chartWidth = width - padding.left - padding.right;
+        const chartHeight = height - padding.top - padding.bottom;
+
+        canvas.width = width * 2;
+        canvas.height = height * 2;
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+        ctx.scale(2, 2);
+
+        ctx.clearRect(0, 0, width, height);
+
+        const totalDist = routeData.distance;
+        const eleRange = stats.max - stats.min || 100;
+        const elePadding = eleRange * 0.1;
+        const minEle = stats.min - elePadding;
+        const maxEle = stats.max + elePadding;
+
+        // Draw gradient fill
+        const gradient = ctx.createLinearGradient(0, padding.top, 0, height - padding.bottom);
+        gradient.addColorStop(0, 'rgba(37, 99, 235, 0.3)');
+        gradient.addColorStop(1, 'rgba(37, 99, 235, 0.05)');
+
+        ctx.beginPath();
+        ctx.moveTo(padding.left, height - padding.bottom);
+
+        elevationData.forEach((point, i) => {
+          const x = padding.left + (point.distance / totalDist) * chartWidth;
+          const y = padding.top + ((maxEle - point.elevation) / (maxEle - minEle)) * chartHeight;
+          if (i === 0) ctx.lineTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+
+        ctx.lineTo(padding.left + chartWidth, height - padding.bottom);
+        ctx.closePath();
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        // Draw elevation line
+        ctx.beginPath();
+        elevationData.forEach((point, i) => {
+          const x = padding.left + (point.distance / totalDist) * chartWidth;
+          const y = padding.top + ((maxEle - point.elevation) / (maxEle - minEle)) * chartHeight;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.strokeStyle = '#2563eb';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Draw POI markers - use distance-based interpolation for accurate placement
+        pois.forEach(poi => {
+          // Use the POI's actual distance along route for X position
+          const poiDistKm = poi.distanceKm || (poi.progressRatio * totalDist);
+          const x = padding.left + (poiDistKm / totalDist) * chartWidth;
+
+          // Find elevation by interpolating between elevation data points based on distance
+          let ele = stats.min;
+          for (let i = 0; i < elevationData.length - 1; i++) {
+            const d1 = elevationData[i].distance;
+            const d2 = elevationData[i + 1].distance;
+            if (poiDistKm >= d1 && poiDistKm <= d2) {
+              // Linear interpolation between the two points
+              const t = (d2 - d1) > 0 ? (poiDistKm - d1) / (d2 - d1) : 0;
+              ele = elevationData[i].elevation + t * (elevationData[i + 1].elevation - elevationData[i].elevation);
+              break;
+            }
+          }
+          // Handle edge case where POI is at the very end
+          if (poiDistKm >= elevationData[elevationData.length - 1]?.distance) {
+            ele = elevationData[elevationData.length - 1]?.elevation || stats.min;
+          }
+
+          const y = padding.top + ((maxEle - ele) / (maxEle - minEle)) * chartHeight;
+
+          ctx.beginPath();
+          ctx.arc(x, y, poi.isPlannedStop ? 5 : 3, 0, Math.PI * 2);
+          ctx.fillStyle = poi.isPlannedStop ? '#fcd34d' : POI_CATEGORIES[poi.category]?.color || '#6b7280';
+          ctx.fill();
+          if (poi.isPlannedStop) {
+            ctx.strokeStyle = '#92400e';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          }
+        });
+
+        // Draw axes
+        ctx.strokeStyle = '#e5e7eb';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, padding.top);
+        ctx.lineTo(padding.left, height - padding.bottom);
+        ctx.lineTo(width - padding.right, height - padding.bottom);
+        ctx.stroke();
+
+        // Y-axis labels
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '10px -apple-system, sans-serif';
+        ctx.textAlign = 'right';
+        const eleSteps = 4;
+        for (let i = 0; i <= eleSteps; i++) {
+          const ele = minEle + (maxEle - minEle) * (1 - i / eleSteps);
+          const y = padding.top + (i / eleSteps) * chartHeight;
+          const label = useMiles ? `${Math.round(mToFt(ele))}ft` : `${Math.round(ele)}m`;
+          ctx.fillText(label, padding.left - 5, y + 3);
+        }
+
+        // X-axis labels
+        ctx.textAlign = 'center';
+        const distSteps = 5;
+        for (let i = 0; i <= distSteps; i++) {
+          const dist = (totalDist * i) / distSteps;
+          const x = padding.left + (i / distSteps) * chartWidth;
+          const label = useMiles ? `${kmToMi(dist).toFixed(0)}` : `${dist.toFixed(0)}`;
+          ctx.fillText(label, x, height - 8);
+        }
+        ctx.fillText(useMiles ? 'miles' : 'km', width - padding.right - 15, height - 8);
+
+      }, [elevationData, dimensions, pois, stats, useMiles]);
+
+      const handleMouseMove = (e) => {
+        if (!containerRef.current || !elevationData.length || !routeData) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const padding = { left: 45, right: 10, top: 10, bottom: 25 };
+        const chartWidth = dimensions.width - padding.left - padding.right;
+        const chartHeight = dimensions.height - padding.top - padding.bottom;
+
+        if (x < padding.left || x > dimensions.width - padding.right) {
+          setTooltip(null);
+          return;
+        }
+
+        // Convert X position to distance along route
+        const progress = (x - padding.left) / chartWidth;
+        const totalDist = routeData.distance;
+        const hoverDist = progress * totalDist;
+
+        // Find elevation by interpolating between data points based on distance
+        let elevation = stats.min;
+        let foundPoint = null;
+
+        for (let i = 0; i < elevationData.length - 1; i++) {
+          const d1 = elevationData[i].distance;
+          const d2 = elevationData[i + 1].distance;
+          if (hoverDist >= d1 && hoverDist <= d2) {
+            // Linear interpolation between the two points
+            const t = (d2 - d1) > 0 ? (hoverDist - d1) / (d2 - d1) : 0;
+            elevation = elevationData[i].elevation + t * (elevationData[i + 1].elevation - elevationData[i].elevation);
+            foundPoint = {
+              distance: hoverDist,
+              elevation: elevation,
+              lat: elevationData[i].lat + t * (elevationData[i + 1].lat - elevationData[i].lat),
+              lon: elevationData[i].lon + t * (elevationData[i + 1].lon - elevationData[i].lon)
+            };
+            break;
+          }
+        }
+
+        // Handle edge case at the very end
+        if (!foundPoint && hoverDist >= elevationData[elevationData.length - 1]?.distance) {
+          foundPoint = elevationData[elevationData.length - 1];
+          elevation = foundPoint?.elevation || stats.min;
+        }
+
+        // Handle edge case at the very beginning
+        if (!foundPoint && hoverDist <= elevationData[0]?.distance) {
+          foundPoint = elevationData[0];
+          elevation = foundPoint?.elevation || stats.min;
+        }
+
+        if (foundPoint || elevation) {
+          const dist = useMiles ? kmToMi(hoverDist).toFixed(1) : hoverDist.toFixed(1);
+          const ele = useMiles ? Math.round(mToFt(elevation)) : Math.round(elevation);
+
+          // Calculate Y position for the dot using same formula as canvas drawing
+          const eleRange = stats.max - stats.min || 100;
+          const elePadding = eleRange * 0.1;
+          const minEle = stats.min - elePadding;
+          const maxEle = stats.max + elePadding;
+          const y = padding.top + ((maxEle - elevation) / (maxEle - minEle)) * chartHeight;
+
+          setTooltip({
+            x,
+            y,
+            text: `${dist} ${useMiles ? 'mi' : 'km'} • ${ele} ${useMiles ? 'ft' : 'm'}`,
+            lat: foundPoint?.lat,
+            lon: foundPoint?.lon
+          });
+        }
+      };
+
+      const handleClick = (e) => {
+        if (!containerRef.current || !elevationData.length || !onPointClick) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const padding = { left: 45, right: 10 };
+        const chartWidth = dimensions.width - padding.left - padding.right;
+
+        if (x < padding.left || x > dimensions.width - padding.right) return;
+
+        const progress = (x - padding.left) / chartWidth;
+        const idx = Math.floor(progress * (elevationData.length - 1));
+        const point = elevationData[idx];
+
+        if (point) {
+          onPointClick(point.lat, point.lon);
+        }
+      };
+
+      const totalGain = useMiles ? Math.round(mToFt(stats.totalGain)) : Math.round(stats.totalGain);
+      const totalLoss = useMiles ? Math.round(mToFt(stats.totalLoss)) : Math.round(stats.totalLoss);
+      const minEle = useMiles ? Math.round(mToFt(stats.min)) : Math.round(stats.min);
+      const maxEle = useMiles ? Math.round(mToFt(stats.max)) : Math.round(stats.max);
+      const unit = useMiles ? 'ft' : 'm';
+
+      return (
+        <div className="elevation-profile">
+          <h4><Icons.Mountain /> Elevation Profile</h4>
+          <div
+            ref={containerRef}
+            className="elevation-chart"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={() => setTooltip(null)}
+            onClick={handleClick}
+          >
+            <canvas ref={canvasRef} className="elevation-canvas" />
+            {tooltip && (
+              <>
+                <div className="elevation-hover-dot" style={{ left: tooltip.x, top: tooltip.y }} />
+                <div className="elevation-tooltip" style={{ left: tooltip.x, top: -30 }}>
+                  {tooltip.text}
+                </div>
+              </>
+            )}
+          </div>
+          <div className="elevation-stats">
+            <span>↑ {totalGain.toLocaleString()} {unit} gain</span>
+            <span>↓ {totalLoss.toLocaleString()} {unit} loss</span>
+            <span>Min: {minEle.toLocaleString()} {unit}</span>
+            <span>Max: {maxEle.toLocaleString()} {unit}</span>
+          </div>
+        </div>
+      );
+    }
+
+    // Main App
+    function App() {
+      const [inputMode, setInputMode] = useState('file');
+      const [routeUrl, setRouteUrl] = useState('');
+      const [useMiles, setUseMiles] = useState(() => {
+        try {
+          return localStorage.getItem(UNITS_KEY) !== 'km';
+        } catch { return true; }
+      });
+      const [avgSpeed, setAvgSpeed] = useState(16); // Always stored in km/h internally
+      const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+      const [startTime, setStartTime] = useState('07:00');
+      const [isLoading, setIsLoading] = useState(false);
+      const [loadingStep, setLoadingStep] = useState('');
+      const [loadingSteps, setLoadingSteps] = useState([]);
+      const [error, setError] = useState(null);
+      const [routeData, setRouteData] = useState(null);
+      const [pois, setPois] = useState([]);
+      const [plannedStops, setPlannedStops] = useState({}); // { poiId: minutes }
+      const [possibleStops, setPossibleStops] = useState({}); // { poiId: true } - marked as potential stop
+      const [maxDetourDistance, setMaxDetourDistance] = useState(1500); // meters - max distance off route to show
+      const [activeView, setActiveView] = useState('timeline');
+      const [viewMode, setViewMode] = useState('full'); // 'full' or 'condensed'
+      const [activeFilters, setActiveFilters] = useState(Object.keys(POI_CATEGORIES));
+      const [searchCategories, setSearchCategories] = useState(Object.keys(POI_CATEGORIES)); // Categories to search on upload
+      const [showExport, setShowExport] = useState(false);
+      const [dragOver, setDragOver] = useState(false);
+      const [history, setHistory] = useState([]);
+      const [expandedStopId, setExpandedStopId] = useState(null); // For condensed view popover
+
+      const mapRef = useRef(null);
+      const mapInstanceRef = useRef(null);
+      const markersRef = useRef([]);
+      const mileMarkersRef = useRef([]);
+      const highlightMarkerRef = useRef(null);
+      const fileInputRef = useRef(null);
+
+      // Save unit preference
+      useEffect(() => {
+        try {
+          localStorage.setItem(UNITS_KEY, useMiles ? 'mi' : 'km');
+        } catch {}
+      }, [useMiles]);
+
+      useEffect(() => {
+        setHistory(getHistory());
+      }, []);
+
+      const getStartDateTime = () => {
+        const [year, month, day] = startDate.split('-').map(Number);
+        const [hours, minutes] = startTime.split(':').map(Number);
+        return new Date(year, month - 1, day, hours, minutes);
+      };
+
+      const totalStopMinutes = useMemo(() =>
+        Object.values(plannedStops).reduce((sum, mins) => sum + mins, 0),
+        [plannedStops]
+      );
+
+      const getEndDateTime = () => {
+        if (!routeData) return null;
+        const start = getStartDateTime();
+        const ridingHours = routeData.distance / avgSpeed;
+        const totalHours = ridingHours + (totalStopMinutes / 60);
+        return new Date(start.getTime() + totalHours * 60 * 60 * 1000);
+      };
+
+      const enrichedPOIs = useMemo(() => {
+        if (!routeData || pois.length === 0) return [];
+        return enrichPOIs(pois, routeData.distance, getStartDateTime(), avgSpeed, plannedStops, possibleStops);
+      }, [pois, routeData, avgSpeed, startDate, startTime, plannedStops, possibleStops]);
+
+      const filteredPOIs = useMemo(() =>
+        enrichedPOIs.filter(p =>
+          activeFilters.includes(p.category) &&
+          p.distanceOffRoute <= maxDetourDistance
+        ),
+        [enrichedPOIs, activeFilters, maxDetourDistance]
+      );
+
+      const plannedStopsCount = Object.keys(plannedStops).filter(id => plannedStops[id] > 0).length;
+      const possibleStopsCount = Object.keys(possibleStops).filter(id => possibleStops[id]).length;
+      const totalSelectedCount = plannedStopsCount + possibleStopsCount;
+
+      // Get all selected stops (both planned and possible) for summary
+      const selectedStops = useMemo(() => {
+        return enrichedPOIs.filter(p => p.isPlannedStop || p.isPossibleStop)
+          .sort((a, b) => a.progressRatio - b.progressRatio);
+      }, [enrichedPOIs]);
+
+      // Format distance based on unit preference
+      const formatDistance = (km, decimals = 1) => {
+        if (useMiles) {
+          return `${kmToMi(km).toFixed(decimals)} mi`;
+        }
+        return `${km.toFixed(decimals)} km`;
+      };
+
+      // Format elevation based on unit preference
+      const formatElevation = (meters) => {
+        if (useMiles) {
+          return `${Math.round(mToFt(meters)).toLocaleString()} ft`;
+        }
+        return `${Math.round(meters).toLocaleString()} m`;
+      };
+
+      // Format speed based on unit preference
+      const formatSpeed = (kmh) => {
+        if (useMiles) {
+          return `${kmToMi(kmh).toFixed(1)} mph`;
+        }
+        return `${kmh.toFixed(1)} km/h`;
+      };
+
+      // Format detour distance
+      const formatDetour = (meters) => {
+        if (useMiles) {
+          const feet = mToFt(meters);
+          if (feet < 500) return `${Math.round(feet)} ft off route`;
+          return `${(feet / 5280).toFixed(1)} mi off route`;
+        }
+        if (meters < 100) return `${Math.round(meters)} m off route`;
+        return `${(meters / 1000).toFixed(1)} km off route`;
+      };
+
+      // Get display distance value (for stat cards)
+      const getDisplayDistance = (km) => {
+        return useMiles ? kmToMi(km).toFixed(1) : km.toFixed(1);
+      };
+
+      const getDisplayElevation = (meters) => {
+        return useMiles ? Math.round(mToFt(meters)).toLocaleString() : Math.round(meters).toLocaleString();
+      };
+
+      const togglePlannedStop = (poiId) => {
+        setPlannedStops(prev => {
+          const current = prev[poiId] || 0;
+          if (current > 0) {
+            const { [poiId]: removed, ...rest } = prev;
+            return rest;
+          } else {
+            const currentCount = Object.keys(prev).filter(id => prev[id] > 0).length;
+            if (currentCount >= MAX_PLANNED_STOPS) {
+              alert(`Maximum ${MAX_PLANNED_STOPS} planned stops allowed`);
+              return prev;
+            }
+            // Remove from possible stops if adding to planned
+            setPossibleStops(ps => {
+              const { [poiId]: removed, ...rest } = ps;
+              return rest;
+            });
+            return { ...prev, [poiId]: 15 };
+          }
+        });
+      };
+
+      const togglePossibleStop = (poiId) => {
+        // If it's already a planned stop, don't allow marking as possible
+        if (plannedStops[poiId] > 0) return;
+
+        setPossibleStops(prev => {
+          if (prev[poiId]) {
+            const { [poiId]: removed, ...rest } = prev;
+            return rest;
+          }
+          return { ...prev, [poiId]: true };
+        });
+      };
+
+      const removeSelectedStop = (poiId) => {
+        // Remove from both planned and possible stops
+        setPlannedStops(prev => {
+          const { [poiId]: removed, ...rest } = prev;
+          return rest;
+        });
+        setPossibleStops(prev => {
+          const { [poiId]: removed, ...rest } = prev;
+          return rest;
+        });
+      };
+
+      const updateStopTime = (poiId, minutes) => {
+        const mins = Math.max(0, Math.min(480, parseInt(minutes) || 0));
+        setPlannedStops(prev => {
+          if (mins === 0) {
+            const { [poiId]: removed, ...rest } = prev;
+            return rest;
+          }
+          return { ...prev, [poiId]: mins };
+        });
+      };
+
+      // Convert possible stop to planned stop
+      const convertToPlanedStop = (poiId) => {
+        setPossibleStops(prev => {
+          const { [poiId]: removed, ...rest } = prev;
+          return rest;
+        });
+        setPlannedStops(prev => ({ ...prev, [poiId]: 15 }));
+      };
+
+      const handleFile = async (file) => {
+        if (!file) return;
+
+        if (searchCategories.length === 0) {
+          setError('Please select at least one resource type to search.');
+          return;
+        }
+
+        setError(null);
+        setIsLoading(true);
+        setPlannedStops({});
+        setPossibleStops({});
+        setRouteData(null);
+        setPois([]);
+
+        const fileSize = (file.size / 1024 / 1024).toFixed(1);
+        const isLargeFile = file.size > 500000; // > 500KB
+
+        setLoadingSteps([
+          { id: 'parse', label: `Parsing GPX file (${fileSize}MB)${isLargeFile ? ' - large file, please wait...' : ''}`, status: 'active' },
+          { id: 'pois', label: 'Finding resources along route', status: 'pending' },
+          { id: 'process', label: 'Processing results', status: 'pending' }
+        ]);
+
+        try {
+          // Use setTimeout to allow UI to update before heavy parsing
+          await new Promise(resolve => setTimeout(resolve, 50));
+
+          const text = await file.text();
+          const route = parseGPX(text);
+
+          if (route.coordinates.length < 2) {
+            throw new Error('GPX file contains no valid track points');
+          }
+
+          const routeInfo = `${route.distance.toFixed(0)}km route with ${route.totalPoints || route.coordinates.length} track points`;
+          console.log(`Parsed: ${routeInfo}`);
+
+          setRouteData(route);
+
+          setLoadingSteps(prev => prev.map(s =>
+            s.id === 'parse' ? { ...s, status: 'done', label: `Parsed ${routeInfo}` } :
+            s.id === 'pois' ? { ...s, status: 'active', label: 'Finding resources along route (this may take a minute for long routes)...' } : s
+          ));
+
+          // Allow UI to update before POI fetch
+          await new Promise(resolve => setTimeout(resolve, 50));
+
+          let rawPois = [];
+          try {
+            rawPois = await fetchPOIs(route.coordinates, setLoadingStep, searchCategories);
+          } catch (poiErr) {
+            console.error('POI fetch error:', poiErr);
+            // Continue without POIs rather than failing completely
+            setError('Could not fetch POIs from OpenStreetMap. The route is loaded - you can try refreshing to fetch POIs again.');
+          }
+
+          setLoadingSteps(prev => prev.map(s =>
+            s.id === 'pois' ? { ...s, status: 'done', label: `Found ${rawPois.length} resources` } :
+            s.id === 'process' ? { ...s, status: 'active' } : s
+          ));
+
+          setPois(rawPois);
+          setActiveFilters([...searchCategories]); // Sync view filters with search categories
+          setLoadingSteps(prev => prev.map(s => ({ ...s, status: 'done' })));
+
+          const updatedHistory = saveToHistory(route, rawPois);
+          setHistory(updatedHistory);
+
+        } catch (err) {
+          console.error('File processing error:', err);
+          setError(err.message || 'Failed to process route');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      const loadFromHistory = async (entry) => {
+        if (searchCategories.length === 0) {
+          setError('Please select at least one resource type to search.');
+          return;
+        }
+
+        setError(null);
+        setIsLoading(true);
+        setPlannedStops({});
+        setPossibleStops({});
+
+        setLoadingSteps([
+          { id: 'load', label: 'Loading saved route...', status: 'active' },
+          { id: 'pois', label: 'Re-analyzing with current settings...', status: 'pending' },
+          { id: 'process', label: 'Processing results', status: 'pending' }
+        ]);
+
+        try {
+          setRouteData(entry.routeData);
+
+          setLoadingSteps(prev => prev.map(s =>
+            s.id === 'load' ? { ...s, status: 'done' } :
+            s.id === 'pois' ? { ...s, status: 'active' } : s
+          ));
+
+          // Re-fetch POIs with current maxDetourDistance setting
+          let rawPois = [];
+          try {
+            rawPois = await fetchPOIs(entry.routeData.coordinates, setLoadingStep, searchCategories);
+          } catch (poiErr) {
+            console.error('POI fetch error:', poiErr);
+            // Fall back to stored POIs
+            rawPois = entry.poisData || [];
+            setError('Could not refresh POIs. Using cached data.');
+          }
+
+          setLoadingSteps(prev => prev.map(s =>
+            s.id === 'pois' ? { ...s, status: 'done', label: `Found ${rawPois.length} resources` } :
+            s.id === 'process' ? { ...s, status: 'active' } : s
+          ));
+
+          setPois(rawPois);
+          setActiveFilters([...searchCategories]); // Sync view filters with search categories
+          setLoadingSteps(prev => prev.map(s => ({ ...s, status: 'done' })));
+
+        } catch (err) {
+          console.error('Load history error:', err);
+          setError(err.message || 'Failed to load route');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      const handleDeleteHistory = (e, id) => {
+        e.stopPropagation();
+        const updated = deleteFromHistory(id);
+        setHistory(updated);
+      };
+
+      const handleUrlSubmit = async () => {
+        if (!routeUrl.trim()) return;
+        setError(null);
+
+        const rwgpsMatch = routeUrl.match(/ridewithgps\.com\/routes\/(\d+)/);
+        const stravaMatch = routeUrl.match(/strava\.com\/routes\/(\d+)/);
+
+        if (!rwgpsMatch && !stravaMatch) {
+          setError('Please enter a valid RideWithGPS or Strava route URL');
+          return;
+        }
+
+        const platform = rwgpsMatch ? 'RideWithGPS' : 'Strava';
+        setError(`Due to ${platform}'s API restrictions, please export your route as a GPX file and upload it here. On ${platform}, open your route and click "Export" or "Download GPX".`);
+      };
+
+      const handleDragOver = (e) => { e.preventDefault(); setDragOver(true); };
+      const handleDragLeave = () => setDragOver(false);
+      const handleDrop = (e) => {
+        e.preventDefault();
+        setDragOver(false);
+        const file = e.dataTransfer.files[0];
+        if (file && (file.name.endsWith('.gpx') || file.type === 'application/gpx+xml')) {
+          handleFile(file);
+        } else {
+          setError('Please upload a GPX file');
+        }
+      };
+
+      // Handle click on elevation profile
+      const handleElevationClick = useCallback((lat, lon) => {
+        if (!mapInstanceRef.current) return;
+
+        // Remove existing highlight
+        if (highlightMarkerRef.current) {
+          highlightMarkerRef.current.remove();
+        }
+
+        // Add highlight marker
+        const icon = L.divIcon({
+          className: 'highlight-marker',
+          html: '<div style="width:16px;height:16px;background:#ef4444;border:3px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
+          iconSize: [16, 16],
+          iconAnchor: [8, 8]
+        });
+
+        highlightMarkerRef.current = L.marker([lat, lon], { icon })
+          .addTo(mapInstanceRef.current);
+
+        // Pan to location
+        mapInstanceRef.current.panTo([lat, lon]);
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+          if (highlightMarkerRef.current) {
+            highlightMarkerRef.current.remove();
+            highlightMarkerRef.current = null;
+          }
+        }, 5000);
+      }, []);
+
+      // Initialize map
+      useEffect(() => {
+        if (!routeData || !mapRef.current) return;
+
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.remove();
+          mapInstanceRef.current = null;
+        }
+
+        // Small delay to ensure DOM is ready
+        const initMap = () => {
+          if (!mapRef.current) return;
+
+          try {
+            const midIdx = Math.floor(routeData.coordinates.length / 2);
+            const map = L.map(mapRef.current).setView(
+              [routeData.coordinates[midIdx][0], routeData.coordinates[midIdx][1]],
+              10
+            );
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            const routeCoords = routeData.coordinates.map(([lat, lon]) => [lat, lon]);
+            const routeLine = L.polyline(routeCoords, {
+              color: '#2563eb',
+              weight: 4,
+              opacity: 0.8
+            }).addTo(map);
+
+            map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+            mapInstanceRef.current = map;
+
+            // Add zoom listener for mile markers - use inline function to avoid stale closure
+            const handleZoomEnd = () => {
+              if (!mapInstanceRef.current || !routeData) return;
+
+              // Clear existing markers
+              mileMarkersRef.current.forEach(m => m.remove());
+              mileMarkersRef.current = [];
+
+              const currentMap = mapInstanceRef.current;
+              const zoom = currentMap.getZoom();
+              const currentUseMiles = localStorage.getItem(UNITS_KEY) !== 'km';
+
+              let intervalKm;
+              if (zoom >= 13) {
+                intervalKm = currentUseMiles ? miToKm(1) : 1;
+              } else if (zoom >= 11) {
+                intervalKm = currentUseMiles ? miToKm(5) : 5;
+              } else {
+                intervalKm = currentUseMiles ? miToKm(10) : 10;
+              }
+
+              const totalDist = routeData.distance;
+              const coords = routeData.coordinates;
+
+              // Check if coordinates have cumulative distance (4th element)
+              const hasCumulativeDist = coords.length > 0 && coords[0].length >= 4;
+              if (!hasCumulativeDist) return; // Skip mile markers for legacy data
+
+              for (let dist = intervalKm; dist < totalDist; dist += intervalKm) {
+                let targetIdx = 0;
+                for (let i = 0; i < coords.length; i++) {
+                  if ((coords[i][3] || 0) >= dist) {
+                    targetIdx = i;
+                    break;
+                  }
+                }
+
+                if (targetIdx > 0 && targetIdx < coords.length) {
+                  const [lat, lon] = coords[targetIdx];
+                  const displayDist = currentUseMiles ? Math.round(kmToMi(dist)) : Math.round(dist);
+                  const unit = currentUseMiles ? 'mi' : 'km';
+
+                  const icon = L.divIcon({
+                    className: 'mile-marker',
+                    html: `<div class="mile-marker-icon">${displayDist} ${unit}</div>`,
+                    iconSize: [40, 20],
+                    iconAnchor: [20, 10]
+                  });
+
+                  const marker = L.marker([lat, lon], { icon, interactive: false })
+                    .addTo(currentMap);
+                  mileMarkersRef.current.push(marker);
+                }
+              }
+            };
+
+            map.on('zoomend', handleZoomEnd);
+            handleZoomEnd();
+          } catch (err) {
+            console.error('Map initialization error:', err);
+          }
+        };
+
+        // Use requestAnimationFrame to ensure DOM is ready
+        requestAnimationFrame(initMap);
+
+        return () => {
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.remove();
+            mapInstanceRef.current = null;
+          }
+        };
+      }, [routeData]);
+
+      // Update mile markers when units change
+      useEffect(() => {
+        if (!mapInstanceRef.current || !routeData) return;
+
+        // Clear and redraw mile markers
+        mileMarkersRef.current.forEach(m => m.remove());
+        mileMarkersRef.current = [];
+
+        const map = mapInstanceRef.current;
+        const zoom = map.getZoom();
+
+        let intervalKm;
+        if (zoom >= 13) {
+          intervalKm = useMiles ? miToKm(1) : 1;
+        } else if (zoom >= 11) {
+          intervalKm = useMiles ? miToKm(5) : 5;
+        } else {
+          intervalKm = useMiles ? miToKm(10) : 10;
+        }
+
+        const totalDist = routeData.distance;
+        const coords = routeData.coordinates;
+
+        // Check if coordinates have cumulative distance (4th element)
+        const hasCumulativeDist = coords.length > 0 && coords[0].length >= 4;
+        if (!hasCumulativeDist) return; // Skip mile markers for legacy data
+
+        for (let dist = intervalKm; dist < totalDist; dist += intervalKm) {
+          let targetIdx = 0;
+          for (let i = 0; i < coords.length; i++) {
+            if ((coords[i][3] || 0) >= dist) {
+              targetIdx = i;
+              break;
+            }
+          }
+
+          if (targetIdx > 0 && targetIdx < coords.length) {
+            const [lat, lon] = coords[targetIdx];
+            const displayDist = useMiles ? Math.round(kmToMi(dist)) : Math.round(dist);
+            const unit = useMiles ? 'mi' : 'km';
+
+            const icon = L.divIcon({
+              className: 'mile-marker',
+              html: `<div class="mile-marker-icon">${displayDist} ${unit}</div>`,
+              iconSize: [40, 20],
+              iconAnchor: [20, 10]
+            });
+
+            const marker = L.marker([lat, lon], { icon, interactive: false })
+              .addTo(map);
+            mileMarkersRef.current.push(marker);
+          }
+        }
+      }, [useMiles, routeData]);
+
+      // Update markers
+      useEffect(() => {
+        if (!mapInstanceRef.current || !routeData) return;
+
+        markersRef.current.forEach(m => m.remove());
+        markersRef.current = [];
+
+        filteredPOIs.forEach(poi => {
+          // Skip POIs with invalid coordinates
+          if (!poi.coordinates || !Array.isArray(poi.coordinates) ||
+              poi.coordinates.length < 2 ||
+              typeof poi.coordinates[0] !== 'number' ||
+              typeof poi.coordinates[1] !== 'number' ||
+              isNaN(poi.coordinates[0]) || isNaN(poi.coordinates[1])) {
+            console.warn('Skipping POI with invalid coordinates:', poi.name);
+            return;
+          }
+
+          const cat = POI_CATEGORIES[poi.category];
+          const iconHtml = poi.category === 'water' ? '💧' :
+                          poi.category === 'camp' ? '⛺' :
+                          poi.category === 'food' ? '🍴' :
+                          poi.category === 'store' ? '🏪' : '📸';
+
+          const isPlanned = poi.isPlannedStop;
+          const isPossible = poi.isPossibleStop;
+
+          // Enhanced styling for planned and possible stops
+          let markerHtml;
+          if (isPlanned) {
+            markerHtml = `<div style="width:32px;height:32px;background:${cat.bgColor};border:3px solid #fcd34d;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 0 0 3px #78350f,0 4px 8px rgba(0,0,0,0.3);">${iconHtml}</div>`;
+          } else if (isPossible) {
+            markerHtml = `<div style="width:30px;height:30px;background:${cat.bgColor};border:3px solid #3b82f6;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 0 0 2px #1e40af,0 3px 6px rgba(0,0,0,0.2);">${iconHtml}</div>`;
+          } else {
+            markerHtml = `<div style="width:26px;height:26px;background:${cat.bgColor};border:2px solid ${cat.color};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;">${iconHtml}</div>`;
+          }
+
+          const icon = L.divIcon({
+            className: 'custom-marker',
+            html: markerHtml,
+            iconSize: isPlanned ? [32, 32] : isPossible ? [30, 30] : [26, 26],
+            iconAnchor: isPlanned ? [16, 16] : isPossible ? [15, 15] : [13, 13]
+          });
+
+          const osmUrl = `https://www.openstreetmap.org/${poi.osmType}/${poi.osmId}`;
+          const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${poi.coordinates[0]},${poi.coordinates[1]}`;
+          const detourText = poi.distanceOffRoute < 50 ? 'On route' : formatDetour(poi.distanceOffRoute);
+          const distText = useMiles ? `Mile ${kmToMi(poi.distanceKm).toFixed(1)}` : `Km ${poi.distanceKm.toFixed(1)}`;
+
+          // Create unique button IDs for this POI
+          const plannedBtnId = `planned-btn-${poi.id}`;
+          const possibleBtnId = `possible-btn-${poi.id}`;
+
+          const marker = L.marker(poi.coordinates, { icon, zIndexOffset: isPlanned ? 1000 : isPossible ? 500 : 0 })
+            .addTo(mapInstanceRef.current)
+            .bindPopup(`
+              <div class="popup-title">${poi.name}</div>
+              <div class="popup-meta">${poi.type}</div>
+              <div class="popup-meta">ETA: ${formatTime(poi.eta)} • ${distText}</div>
+              <div class="popup-meta">${detourText}</div>
+              ${isPlanned ? '<div class="popup-meta" style="color:#d97706;font-weight:600;">⏱ Planned stop: ' + poi.stopMinutes + ' min</div>' : ''}
+              ${isPossible ? '<div class="popup-meta" style="color:#1e40af;font-weight:600;">📌 Possible stop</div>' : ''}
+              <div style="display:flex;gap:6px;margin:8px 0;">
+                <button id="${plannedBtnId}" style="padding:4px 8px;font-size:11px;border-radius:4px;border:1px solid ${isPlanned ? '#fcd34d' : '#d1d5db'};background:${isPlanned ? '#fef3c7' : 'white'};cursor:pointer;">
+                  ${isPlanned ? '✓ Planned' : '+ Planned'}
+                </button>
+                <button id="${possibleBtnId}" style="padding:4px 8px;font-size:11px;border-radius:4px;border:1px solid ${isPossible ? '#93c5fd' : '#d1d5db'};background:${isPossible ? '#dbeafe' : 'white'};cursor:pointer;" ${isPlanned ? 'disabled' : ''}>
+                  ${isPossible ? '✓ Possible' : '+ Possible'}
+                </button>
+              </div>
+              <div class="popup-links">
+                <a href="${osmUrl}" target="_blank" class="popup-link">OSM ↗</a>
+                <a href="${gmapsUrl}" target="_blank" class="popup-link gmaps">Google Maps ↗</a>
+              </div>
+            `);
+
+          // Add event listeners for popup buttons
+          marker.on('popupopen', () => {
+            const plannedBtn = document.getElementById(plannedBtnId);
+            const possibleBtn = document.getElementById(possibleBtnId);
+
+            if (plannedBtn) {
+              plannedBtn.onclick = () => togglePlannedStop(poi.id);
+            }
+            if (possibleBtn) {
+              possibleBtn.onclick = () => togglePossibleStop(poi.id);
+            }
+          });
+
+          markersRef.current.push(marker);
+        });
+
+        // Start marker - extract just [lat, lon] from coordinates
+        const startCoord = routeData.coordinates[0];
+        const endCoord = routeData.coordinates[routeData.coordinates.length - 1];
+
+        if (startCoord && startCoord.length >= 2) {
+          const startIcon = L.divIcon({
+            className: 'custom-marker',
+            html: '<div style="width:30px;height:30px;background:#16a34a;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:14px;">S</div>',
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+          });
+          markersRef.current.push(
+            L.marker([startCoord[0], startCoord[1]], { icon: startIcon })
+              .addTo(mapInstanceRef.current)
+              .bindPopup(`<div class="popup-title">Start</div><div class="popup-meta">${formatTime(getStartDateTime())}</div>`)
+          );
+        }
+
+        // End marker
+        if (endCoord && endCoord.length >= 2) {
+          const endIcon = L.divIcon({
+            className: 'custom-marker',
+            html: '<div style="width:30px;height:30px;background:#dc2626;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:14px;">F</div>',
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+          });
+          markersRef.current.push(
+            L.marker([endCoord[0], endCoord[1]], { icon: endIcon })
+              .addTo(mapInstanceRef.current)
+              .bindPopup(`<div class="popup-title">Finish</div><div class="popup-meta">${formatTime(getEndDateTime())}</div>`)
+          );
+        }
+
+      }, [filteredPOIs, routeData, plannedStops, possibleStops, useMiles]);
+
+      const toggleFilter = (cat) => {
+        setActiveFilters(prev =>
+          prev.includes(cat) ? prev.filter(f => f !== cat) : [...prev, cat]
+        );
+      };
+
+      const poiCounts = useMemo(() => {
+        const counts = {};
+        Object.keys(POI_CATEGORIES).forEach(cat => {
+          counts[cat] = enrichedPOIs.filter(p => p.category === cat).length;
+        });
+        return counts;
+      }, [enrichedPOIs]);
+
+      // Export functions - only export selected stops (planned + possible)
+      const exportGPX = () => {
+        if (!routeData) return;
+
+        // Only include selected stops in export
+        const stopsToExport = selectedStops;
+
+        let gpx = `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="RouteScout" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>${routeData.name}</name>
+    <time>${new Date().toISOString()}</time>
+  </metadata>
+  <trk>
+    <name>${routeData.name}</name>
+    <trkseg>
+${routeData.coordinates.map(([lat, lon, ele]) => `      <trkpt lat="${lat}" lon="${lon}">${ele ? `<ele>${ele}</ele>` : ''}</trkpt>`).join('\n')}
+    </trkseg>
+  </trk>
+${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordinates[1]}">
+    <name>${poi.name}${poi.isPlannedStop ? ' [PLANNED]' : poi.isPossibleStop ? ' [POSSIBLE]' : ''}</name>
+    <desc>${poi.type} - ETA: ${formatTime(poi.eta)} - ${formatDistance(poi.distanceKm)} - ${formatDetour(poi.distanceOffRoute)}${poi.isPlannedStop ? ' - Stop: ' + poi.stopMinutes + ' min' : ''}</desc>
+    <type>${poi.category}</type>
+  </wpt>`).join('\n')}
+</gpx>`;
+
+        const blob = new Blob([gpx], { type: 'application/gpx+xml' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${routeData.name.replace(/[^a-z0-9]/gi, '-')}-trip-plan.gpx`;
+        a.click();
+        URL.revokeObjectURL(url);
+        setShowExport(false);
+      };
+
+      const exportPDF = () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Only include selected stops in export
+        const stopsToExport = selectedStops;
+
+        doc.setFontSize(18);
+        doc.text(routeData.name, 20, 20);
+
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        doc.text(`Generated by RouteScout`, 20, 28);
+
+        doc.setTextColor(0);
+        doc.setFontSize(12);
+        doc.text(`Distance: ${formatDistance(routeData.distance)}`, 20, 42);
+        doc.text(`Elevation: ${formatElevation(routeData.elevation)}`, 20, 50);
+        doc.text(`Start: ${formatDate(getStartDateTime())} at ${formatTime(getStartDateTime())}`, 20, 58);
+        doc.text(`Est. Finish: ${formatTime(getEndDateTime())}`, 20, 66);
+        doc.text(`Avg Speed: ${formatSpeed(avgSpeed)}`, 20, 74);
+
+        let yOffset = 82;
+        if (plannedStopsCount > 0) {
+          doc.text(`Planned Stops: ${plannedStopsCount} (${totalStopMinutes} min total)`, 20, yOffset);
+          yOffset += 8;
+        }
+        if (possibleStopsCount > 0) {
+          doc.text(`Possible Stops: ${possibleStopsCount}`, 20, yOffset);
+          yOffset += 8;
+        }
+
+        doc.setFontSize(14);
+        doc.text('Selected Stops', 20, yOffset + 10);
+
+        let y = yOffset + 22;
+        stopsToExport.forEach(poi => {
+          if (y > 270) {
+            doc.addPage();
+            y = 20;
+          }
+          doc.setFontSize(10);
+          doc.setFont(undefined, 'bold');
+          const stopLabel = poi.isPlannedStop ? ` [PLANNED ${poi.stopMinutes}min]` : poi.isPossibleStop ? ' [POSSIBLE]' : '';
+          doc.text(`${formatTime(poi.eta)} - ${poi.name}${stopLabel}`, 25, y);
+          doc.setFont(undefined, 'normal');
+          doc.setFontSize(9);
+          doc.setTextColor(100);
+          doc.text(`${poi.type} | ${formatDistance(poi.distanceKm)} | ${formatDetour(poi.distanceOffRoute)}`, 25, y + 5);
+          doc.setTextColor(0);
+          y += 14;
+        });
+
+        if (stopsToExport.length === 0) {
+          doc.setFontSize(10);
+          doc.setTextColor(100);
+          doc.text('No stops selected. Mark stops as "Planned" or "Possible" to include them here.', 25, y);
+        }
+
+        doc.save(`${routeData.name.replace(/[^a-z0-9]/gi, '-')}-trip-plan.pdf`);
+        setShowExport(false);
+      };
+
+      const exportCalendar = () => {
+        // Only include selected stops in export
+        const stopsToExport = selectedStops;
+
+        const events = stopsToExport.map(poi => {
+          const duration = poi.isPlannedStop ? poi.stopMinutes : 15;
+          const start = poi.eta.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+          const endTime = new Date(poi.eta.getTime() + duration * 60 * 1000);
+          const end = endTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+          return `BEGIN:VEVENT
+DTSTART:${start}
+DTEND:${end}
+SUMMARY:${poi.isPlannedStop ? '[PLANNED] ' : '[POSSIBLE] '}${poi.name}
+DESCRIPTION:${poi.type} - ${formatDistance(poi.distanceKm)} - ${formatDetour(poi.distanceOffRoute)}${poi.isPlannedStop ? '\\nPlanned stop: ' + poi.stopMinutes + ' min' : '\\nPossible stop (no time allocated)'}
+LOCATION:${poi.coordinates[0]},${poi.coordinates[1]}
+END:VEVENT`;
+        }).join('\n');
+
+        const ical = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//RouteScout//Cycling Planner//EN
+${events}
+END:VCALENDAR`;
+
+        const blob = new Blob([ical], { type: 'text/calendar' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${routeData.name.replace(/[^a-z0-9]/gi, '-')}-trip-plan.ics`;
+        a.click();
+        URL.revokeObjectURL(url);
+        setShowExport(false);
+      };
+
+      const resetApp = () => {
+        setRouteData(null);
+        setPois([]);
+        setPlannedStops({});
+        setPossibleStops({});
+        setError(null);
+        setRouteUrl('');
+      };
+
+      // Get display speed label
+      const speedLabel = useMiles
+        ? `${kmToMi(avgSpeed).toFixed(1)} mph`
+        : `${avgSpeed} km/h`;
+
+      return (
+        <div>
+          <header>
+            <div className="container header-content">
+              <div className="logo">
+                <Icons.Bike />
+                RouteScout
+              </div>
+              <div className="header-actions">
+                <div className="unit-toggle">
+                  <button
+                    className={useMiles ? 'active' : ''}
+                    onClick={() => setUseMiles(true)}
+                  >
+                    Miles
+                  </button>
+                  <button
+                    className={!useMiles ? 'active' : ''}
+                    onClick={() => setUseMiles(false)}
+                  >
+                    Km
+                  </button>
+                </div>
+                {routeData && (
+                  <button className="btn btn-outline btn-sm" onClick={resetApp}>
+                    New Route
+                  </button>
+                )}
+              </div>
+            </div>
+          </header>
+
+          {isLoading && (
+            <div className="loading-overlay">
+              <div className="spinner"></div>
+              <div className="loading-text">Analyzing your route...</div>
+              <div className="loading-steps">
+                {loadingSteps.map(step => (
+                  <div key={step.id} className={`loading-step ${step.status}`}>
+                    <span className="loading-step-icon">
+                      {step.status === 'done' ? '✓' : step.status === 'active' ? '○' : '·'}
+                    </span>
+                    {step.label}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!routeData && (
+            <section className="input-section">
+              <div className="container">
+                <div className="card" style={{ padding: '32px' }}>
+                  <h2 style={{ marginBottom: '8px', fontSize: '24px' }}>Plan Your Adventure</h2>
+                  <p style={{ color: '#6b7280', marginBottom: '24px' }}>
+                    Upload a GPX file to discover water, camping, food, and more along your route.
+                  </p>
+
+                  {error && (
+                    <div className="alert alert-warning">
+                      <span className="alert-icon">⚠️</span>
+                      <div className="alert-content">
+                        <div className="alert-text">{error}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="settings-row">
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label>Start Date</label>
+                      <input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label>Start Time</label>
+                      <input
+                        type="time"
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label>Average Speed</label>
+                      <div className="speed-input-group">
+                        <input
+                          type="number"
+                          min={useMiles ? 3 : 5}
+                          max={useMiles ? 25 : 40}
+                          step="0.5"
+                          value={useMiles ? kmToMi(avgSpeed).toFixed(1) : avgSpeed}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value) || (useMiles ? 10 : 16);
+                            setAvgSpeed(useMiles ? miToKm(val) : val);
+                          }}
+                        />
+                        <span>{useMiles ? 'mph' : 'km/h'}</span>
+                      </div>
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label>Max Detour</label>
+                      <select
+                        value={maxDetourDistance}
+                        onChange={(e) => setMaxDetourDistance(Number(e.target.value))}
+                      >
+                        <option value={500}>{useMiles ? '~0.3 mi' : '500 m'}</option>
+                        <option value={1000}>{useMiles ? '~0.6 mi' : '1 km'}</option>
+                        <option value={1500}>{useMiles ? '~1 mi' : '1.5 km'}</option>
+                        <option value={3000}>{useMiles ? '~2 mi' : '3 km'}</option>
+                        <option value={5000}>{useMiles ? '~3 mi' : '5 km'}</option>
+                        <option value={10000}>{useMiles ? '~6 mi' : '10 km'}</option>
+                        <option value={99999}>Show all</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="search-categories" style={{ marginTop: '20px' }}>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#374151' }}>
+                      Resources to Search
+                    </label>
+                    <div className="filter-pills" style={{ marginTop: '0' }}>
+                      {Object.entries(POI_CATEGORIES).map(([key, cat]) => (
+                        <button
+                          key={key}
+                          className={`pill ${searchCategories.includes(key) ? 'active' : ''}`}
+                          onClick={() => {
+                            setSearchCategories(prev =>
+                              prev.includes(key)
+                                ? prev.filter(k => k !== key)
+                                : [...prev, key]
+                            );
+                          }}
+                        >
+                          <cat.icon />
+                          {cat.label}
+                        </button>
+                      ))}
+                    </div>
+                    {searchCategories.length === 0 && (
+                      <p style={{ fontSize: '13px', color: '#dc2626', marginTop: '8px' }}>
+                        Select at least one resource type to search.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="input-tabs" style={{ marginTop: '24px' }}>
+                    <button
+                      className={`input-tab ${inputMode === 'file' ? 'active' : ''}`}
+                      onClick={() => setInputMode('file')}
+                    >
+                      <Icons.Upload /> Upload GPX
+                    </button>
+                    <button
+                      className={`input-tab ${inputMode === 'url' ? 'active' : ''}`}
+                      onClick={() => setInputMode('url')}
+                    >
+                      <Icons.Link /> Paste URL
+                    </button>
+                    {history.length > 0 && (
+                      <button
+                        className={`input-tab ${inputMode === 'history' ? 'active' : ''}`}
+                        onClick={() => setInputMode('history')}
+                      >
+                        <Icons.History /> Recent
+                      </button>
+                    )}
+                  </div>
+
+                  {inputMode === 'file' && (
+                    <div
+                      className={`file-drop ${dragOver ? 'dragover' : ''}`}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <div className="file-drop-icon">📁</div>
+                      <h3>Drop your GPX file here</h3>
+                      <p>or click to browse</p>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".gpx,application/gpx+xml"
+                        onChange={(e) => handleFile(e.target.files[0])}
+                      />
+                    </div>
+                  )}
+
+                  {inputMode === 'url' && (
+                    <div>
+                      <div className="form-group">
+                        <label>Route URL</label>
+                        <div className="url-input-group">
+                          <input
+                            type="url"
+                            placeholder="https://ridewithgps.com/routes/... or strava.com/routes/..."
+                            value={routeUrl}
+                            onChange={(e) => setRouteUrl(e.target.value)}
+                          />
+                          <button className="btn btn-primary" onClick={handleUrlSubmit}>
+                            Load
+                          </button>
+                        </div>
+                      </div>
+                      <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '8px' }}>
+                        Tip: Export your route as a GPX file from RideWithGPS or Strava and upload it directly.
+                      </p>
+                    </div>
+                  )}
+
+                  {inputMode === 'history' && (
+                    <div className="history-list">
+                      {history.map(entry => (
+                        <div
+                          key={entry.id}
+                          className="history-item"
+                          onClick={() => loadFromHistory(entry)}
+                        >
+                          <div className="history-item-info">
+                            <div className="history-item-name">{entry.name}</div>
+                            <div className="history-item-meta">
+                              {formatDistance(entry.distance)} • {entry.poiCount} resources •
+                              {' '}{new Date(entry.date).toLocaleDateString()}
+                            </div>
+                          </div>
+                          <div className="history-item-actions">
+                            <button
+                              className="history-delete"
+                              onClick={(e) => handleDeleteHistory(e, entry.id)}
+                              title="Delete"
+                            >
+                              <Icons.Trash />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {routeData && (
+            <section className="results-section">
+              <div className="container">
+                <div className="route-info">
+                  <div className="route-info-header">
+                    <span className="route-info-icon">🚴</span>
+                    <h3>{routeData.name}</h3>
+                  </div>
+                  <p>{formatDate(getStartDateTime())} • Starting {formatTime(getStartDateTime())}</p>
+                </div>
+
+                <div className="stats-bar">
+                  <div className="card stat-card">
+                    <div className="stat-value">{getDisplayDistance(routeData.distance)}</div>
+                    <div className="stat-label">{useMiles ? 'Miles' : 'Kilometers'}</div>
+                  </div>
+                  <div className="card stat-card">
+                    <div className="stat-value">{getDisplayElevation(routeData.elevation)}</div>
+                    <div className="stat-label">{useMiles ? 'Ft' : 'M'} Climbing</div>
+                  </div>
+                  <div className="card stat-card">
+                    <div className="stat-value">{(routeData.distance / avgSpeed).toFixed(1)}</div>
+                    <div className="stat-label">Ride Time (h)</div>
+                  </div>
+                  <div className={`card stat-card ${totalStopMinutes > 0 ? 'highlight' : ''}`}>
+                    <div className="stat-value">{totalStopMinutes}</div>
+                    <div className="stat-label">Stop Time (min)</div>
+                  </div>
+                  <div className="card stat-card">
+                    <div className="stat-value">{formatTime(getEndDateTime())}</div>
+                    <div className="stat-label">Est. Finish</div>
+                  </div>
+                  <div className="card stat-card">
+                    <div className="stat-value">{enrichedPOIs.length}</div>
+                    <div className="stat-label">Resources</div>
+                  </div>
+                </div>
+
+                {totalSelectedCount > 0 && (
+                  <div className="planned-stops-summary">
+                    <div className="planned-stops-summary-text">
+                      {plannedStopsCount > 0 && (
+                        <><strong>{plannedStopsCount}</strong> planned stop{plannedStopsCount !== 1 ? 's' : ''} ({totalStopMinutes} min)</>
+                      )}
+                      {plannedStopsCount > 0 && possibleStopsCount > 0 && ' • '}
+                      {possibleStopsCount > 0 && (
+                        <><strong>{possibleStopsCount}</strong> possible stop{possibleStopsCount !== 1 ? 's' : ''}</>
+                      )}
+                    </div>
+                    <button
+                      className="btn btn-xs btn-outline"
+                      onClick={() => { setPlannedStops({}); setPossibleStops({}); }}
+                    >
+                      Clear all
+                    </button>
+                  </div>
+                )}
+
+                {selectedStops.length > 0 && (
+                  <div className="selected-stops-summary">
+                    <h4>Selected Stops ({selectedStops.length})</h4>
+                    {selectedStops.map(poi => (
+                      <div key={poi.id} className={`selected-stop-item ${poi.isPlannedStop ? 'planned' : 'possible'}`}>
+                        <div className="selected-stop-info">
+                          <span style={{ fontSize: '14px' }}>
+                            {poi.category === 'water' ? '💧' : poi.category === 'camp' ? '⛺' : poi.category === 'food' ? '🍴' : poi.category === 'store' ? '🏪' : '📸'}
+                          </span>
+                          <span className="selected-stop-name" title={poi.name}>{poi.name}</span>
+                          <span className="selected-stop-meta">
+                            {formatDistance(poi.distanceKm)} • {formatDetour(poi.distanceOffRoute)}
+                            {poi.isPlannedStop && ` • ${poi.stopMinutes}min`}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                          {poi.isPossibleStop && (
+                            <button
+                              className="btn btn-xs"
+                              style={{ padding: '2px 6px', fontSize: '10px' }}
+                              onClick={() => convertToPlanedStop(poi.id)}
+                              title="Convert to planned stop"
+                            >
+                              + Time
+                            </button>
+                          )}
+                          <button
+                            className="selected-stop-remove"
+                            onClick={() => removeSelectedStop(poi.id)}
+                            title="Remove from selection"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="card" style={{ borderRadius: '12px 12px 0 0' }}>
+                  <div className="map-container" style={{ borderRadius: '12px 12px 0 0' }}>
+                    <div id="map" ref={mapRef}></div>
+                    <div className="map-legend">
+                      {Object.entries(POI_CATEGORIES).map(([key, cat]) => (
+                        <div key={key} className="legend-item">
+                          <div className="legend-dot" style={{ background: cat.bgColor, border: `2px solid ${cat.color}` }}></div>
+                          <span>{cat.label} ({poiCounts[key]})</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <ElevationProfile
+                  routeData={routeData}
+                  pois={filteredPOIs}
+                  useMiles={useMiles}
+                  onPointClick={handleElevationClick}
+                />
+
+                <div className="route-controls">
+                  <div className="form-group">
+                    <label>Start Date</label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      style={{ width: '140px' }}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Start Time</label>
+                    <input
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      style={{ width: '100px' }}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Avg Speed</label>
+                    <div className="speed-input-group">
+                      <input
+                        type="number"
+                        min={useMiles ? 3 : 5}
+                        max={useMiles ? 25 : 40}
+                        step="0.5"
+                        value={useMiles ? kmToMi(avgSpeed).toFixed(1) : avgSpeed}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value) || (useMiles ? 10 : 16);
+                          setAvgSpeed(useMiles ? miToKm(val) : val);
+                        }}
+                      />
+                      <span>{useMiles ? 'mph' : 'km/h'}</span>
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Max Detour</label>
+                    <select
+                      value={maxDetourDistance}
+                      onChange={(e) => setMaxDetourDistance(Number(e.target.value))}
+                      style={{ padding: '8px 10px' }}
+                    >
+                      <option value={500}>{useMiles ? '~0.3 mi' : '500 m'}</option>
+                      <option value={1000}>{useMiles ? '~0.6 mi' : '1 km'}</option>
+                      <option value={1500}>{useMiles ? '~1 mi' : '1.5 km'}</option>
+                      <option value={3000}>{useMiles ? '~2 mi' : '3 km'}</option>
+                      <option value={5000}>{useMiles ? '~3 mi' : '5 km'}</option>
+                      <option value={10000}>{useMiles ? '~6 mi' : '10 km'}</option>
+                      <option value={99999}>Show all</option>
+                    </select>
+                  </div>
+                  <button
+                    className="refresh-btn"
+                    onClick={async () => {
+                      if (!routeData) return;
+                      setIsLoading(true);
+                      setLoadingSteps([{ id: 'refresh', label: 'Refreshing resources...', status: 'active' }]);
+                      try {
+                        const newPois = await fetchPOIs(routeData.coordinates, setLoadingStep, activeFilters);
+                        setPois(newPois);
+                        setLoadingSteps([{ id: 'refresh', label: `Found ${newPois.length} resources`, status: 'done' }]);
+                      } catch (err) {
+                        setError('Failed to refresh resources: ' + err.message);
+                      } finally {
+                        setIsLoading(false);
+                      }
+                    }}
+                    title="Refresh POI data from OpenStreetMap"
+                  >
+                    🔄 Refresh
+                  </button>
+                </div>
+
+                <div className="filter-pills">
+                  {Object.entries(POI_CATEGORIES).map(([key, cat]) => (
+                    <button
+                      key={key}
+                      className={`pill ${activeFilters.includes(key) ? 'active' : ''}`}
+                      onClick={() => toggleFilter(key)}
+                    >
+                      <cat.icon />
+                      {cat.label}
+                      <span className="pill-count">{poiCounts[key]}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="results-header">
+                  <div className="results-tabs">
+                    <button
+                      className={`tab ${activeView === 'timeline' ? 'active' : ''}`}
+                      onClick={() => setActiveView('timeline')}
+                    >
+                      Timeline
+                    </button>
+                    <button
+                      className={`tab ${activeView === 'grid' ? 'active' : ''}`}
+                      onClick={() => setActiveView('grid')}
+                    >
+                      Grid
+                    </button>
+                  </div>
+                  <div className="view-toggle">
+                    <button
+                      className={viewMode === 'full' ? 'active' : ''}
+                      onClick={() => setViewMode('full')}
+                    >
+                      Full
+                    </button>
+                    <button
+                      className={viewMode === 'condensed' ? 'active' : ''}
+                      onClick={() => setViewMode('condensed')}
+                    >
+                      Condensed
+                    </button>
+                  </div>
+                </div>
+
+                {filteredPOIs.length === 0 && (
+                  <div className="empty-state">
+                    <h3>No resources found</h3>
+                    <p>Try enabling more resource categories using the filters above.</p>
+                  </div>
+                )}
+
+                {activeView === 'timeline' && filteredPOIs.length > 0 && viewMode === 'full' && (
+                  <div className="timeline">
+                    <div className="timeline-item">
+                      <div className="timeline-marker start">▶</div>
+                      <div className="timeline-content">
+                        <div className="timeline-time">{formatTime(getStartDateTime())}</div>
+                        <div className="timeline-title">Start</div>
+                        <div className="timeline-meta"><span>{useMiles ? 'Mile' : 'Km'} 0</span></div>
+                      </div>
+                    </div>
+
+                    {filteredPOIs.map(poi => {
+                      const cat = POI_CATEGORIES[poi.category];
+                      const detourClass = poi.distanceOffRoute > 200 ? 'far' : '';
+                      const distLabel = useMiles
+                        ? `Mile ${kmToMi(poi.distanceKm).toFixed(1)}`
+                        : `Km ${poi.distanceKm.toFixed(1)}`;
+                      const osmUrl = `https://www.openstreetmap.org/${poi.osmType}/${poi.osmId}`;
+                      const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${poi.coordinates[0]},${poi.coordinates[1]}`;
+
+                      return (
+                        <div key={poi.id} className={`timeline-item ${poi.isPlannedStop ? 'planned-stop' : ''}`}>
+                          <div className={`timeline-marker ${poi.category}`}>
+                            <cat.icon />
+                          </div>
+                          <div className="timeline-content">
+                            <div className="timeline-time">
+                              {formatTime(poi.eta)}
+                              {poi.isPlannedStop && <span className="planned-stop-badge" style={{ marginLeft: '8px' }}>⏱ {poi.stopMinutes} min stop</span>}
+                              {poi.isPossibleStop && <span className="possible-stop-badge" style={{ marginLeft: '8px' }}>📌 Possible</span>}
+                            </div>
+                            <div className="timeline-title">{poi.name}</div>
+                            <div className="timeline-meta">
+                              <span>{poi.type}</span>
+                              <span>{distLabel}</span>
+                              {poi.distanceOffRoute >= 50 && (
+                                <span className={`detour-badge ${detourClass}`}>
+                                  ↗ {formatDetour(poi.distanceOffRoute)}
+                                </span>
+                              )}
+                              {poi.location && (
+                                <span className="location-text">📍 {poi.location}</span>
+                              )}
+                            </div>
+                            {poi.hoursInfo?.display && (
+                              <div style={{ marginTop: '4px' }}>
+                                <span className={`hours-badge ${poi.hoursInfo.isOpen === true ? 'open' : poi.hoursInfo.isOpen === false ? 'closed' : 'unknown'}`}>
+                                  {poi.hoursInfo.isOpen === true ? '✓ Open' : poi.hoursInfo.isOpen === false ? '✗ Closed' : '⏰'} {poi.hoursInfo.display}
+                                </span>
+                              </div>
+                            )}
+                            <div className="timeline-actions">
+                              <div className="stop-buttons">
+                                {!poi.isPlannedStop && !poi.isPossibleStop && (
+                                  <>
+                                    <button
+                                      className="stop-btn"
+                                      onClick={() => togglePlannedStop(poi.id)}
+                                      disabled={plannedStopsCount >= MAX_PLANNED_STOPS}
+                                    >
+                                      + Planned
+                                    </button>
+                                    <button
+                                      className="stop-btn"
+                                      onClick={() => togglePossibleStop(poi.id)}
+                                    >
+                                      + Possible
+                                    </button>
+                                  </>
+                                )}
+                                {poi.isPossibleStop && (
+                                  <>
+                                    <button
+                                      className="stop-btn possible"
+                                      onClick={() => togglePossibleStop(poi.id)}
+                                    >
+                                      ✓ Possible
+                                    </button>
+                                    <button
+                                      className="stop-btn"
+                                      onClick={() => convertToPlanedStop(poi.id)}
+                                    >
+                                      → Planned
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                              {poi.isPlannedStop && (
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                  <div className="stop-time-input">
+                                    <input
+                                      type="number"
+                                      min="5"
+                                      max="480"
+                                      step="5"
+                                      value={poi.stopMinutes}
+                                      onChange={(e) => updateStopTime(poi.id, e.target.value)}
+                                    />
+                                    <span>min</span>
+                                  </div>
+                                  <button
+                                    className="stop-btn planned"
+                                    onClick={() => togglePlannedStop(poi.id)}
+                                  >
+                                    ✓ Planned
+                                  </button>
+                                </div>
+                              )}
+                              <a
+                                href={osmUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="resource-link"
+                              >
+                                OSM <Icons.ExternalLink />
+                              </a>
+                              <a
+                                href={gmapsUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="resource-link gmaps"
+                              >
+                                GMaps <Icons.ExternalLink />
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    <div className="timeline-item">
+                      <div className="timeline-marker end">◼</div>
+                      <div className="timeline-content">
+                        <div className="timeline-time">{formatTime(getEndDateTime())}</div>
+                        <div className="timeline-title">Finish</div>
+                        <div className="timeline-meta">
+                          <span>{useMiles ? 'Mile' : 'Km'} {getDisplayDistance(routeData.distance)}</span>
+                          {totalStopMinutes > 0 && (
+                            <span style={{ color: '#d97706' }}>+{totalStopMinutes} min stops</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeView === 'timeline' && filteredPOIs.length > 0 && viewMode === 'condensed' && (() => {
+                  // Group POIs by 10-mile/km intervals
+                  const interval = useMiles ? miToKm(10) : 10;
+                  const totalDist = routeData.distance;
+                  const numSegments = Math.ceil(totalDist / interval);
+                  const segments = [];
+
+                  for (let i = 0; i <= numSegments; i++) {
+                    const startDist = i * interval;
+                    const endDist = (i + 1) * interval;
+                    const poisInRange = filteredPOIs.filter(p =>
+                      p.distanceKm >= startDist && p.distanceKm < endDist
+                    );
+
+                    // Calculate ETA at this mile marker
+                    const ridingHours = startDist / avgSpeed;
+                    const eta = new Date(getStartDateTime().getTime() + ridingHours * 60 * 60 * 1000);
+
+                    segments.push({
+                      mile: useMiles ? Math.round(kmToMi(startDist)) : Math.round(startDist),
+                      eta,
+                      pois: poisInRange
+                    });
+                  }
+
+                  return (
+                    <div className="condensed-timeline">
+                      {segments.map((seg, idx) => (
+                        <div key={idx} className="mile-marker-row">
+                          <span className="mile-label">
+                            {seg.mile} {useMiles ? 'mi' : 'km'}
+                          </span>
+                          <span className="eta-label">{formatTime(seg.eta)}</span>
+                          <div className="stops-in-range">
+                            {seg.pois.map(poi => {
+                              const cat = POI_CATEGORIES[poi.category];
+                              const iconHtml = poi.category === 'water' ? '💧' :
+                                              poi.category === 'camp' ? '⛺' :
+                                              poi.category === 'food' ? '🍴' :
+                                              poi.category === 'store' ? '🏪' : '📸';
+                              return (
+                                <div
+                                  key={poi.id}
+                                  className={`mini-stop ${poi.isPlannedStop ? 'planned' : ''} ${poi.isPossibleStop ? 'possible' : ''}`}
+                                  onClick={() => setExpandedStopId(expandedStopId === poi.id ? null : poi.id)}
+                                  title={`${poi.name} - ${formatTime(poi.eta)}${poi.hoursInfo?.display ? ' - Hours: ' + poi.hoursInfo.display : ''}`}
+                                >
+                                  <span>{iconHtml}</span>
+                                  <span style={{ maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {poi.name.length > 12 ? poi.name.substring(0, 12) + '...' : poi.name}
+                                  </span>
+                                  {poi.hoursInfo?.isOpen === false && <span style={{ color: '#dc2626' }}>✗</span>}
+                                </div>
+                              );
+                            })}
+                            {seg.pois.length === 0 && (
+                              <span style={{ color: '#9ca3af', fontSize: '11px', fontStyle: 'italic' }}>No stops in range</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+
+                {activeView === 'grid' && filteredPOIs.length > 0 && viewMode === 'full' && (
+                  <div className="resource-grid">
+                    {filteredPOIs.map(poi => {
+                      const cat = POI_CATEGORIES[poi.category];
+                      const detourClass = poi.distanceOffRoute > 200 ? 'far' : '';
+                      const distLabel = useMiles
+                        ? `Mile ${kmToMi(poi.distanceKm).toFixed(1)}`
+                        : `Km ${poi.distanceKm.toFixed(1)}`;
+                      const osmUrl = `https://www.openstreetmap.org/${poi.osmType}/${poi.osmId}`;
+                      const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${poi.coordinates[0]},${poi.coordinates[1]}`;
+
+                      return (
+                        <div key={poi.id} className={`card resource-card ${poi.isPlannedStop ? 'planned-stop' : ''} ${poi.isPossibleStop ? 'possible-stop' : ''}`}>
+                          <div className="resource-card-header">
+                            <div className={`resource-icon ${poi.category}`}>
+                              <cat.icon />
+                            </div>
+                            <div>
+                              <div className="resource-name">{poi.name}</div>
+                              <div className="resource-type">{poi.type}</div>
+                              {poi.location && (
+                                <div className="location-text">📍 {poi.location}</div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="resource-details">
+                            <p>🕐 ETA: {formatTime(poi.eta)}</p>
+                            {poi.hoursInfo?.display && (
+                              <p>
+                                <span className={`hours-badge ${poi.hoursInfo.isOpen === true ? 'open' : poi.hoursInfo.isOpen === false ? 'closed' : 'unknown'}`}>
+                                  {poi.hoursInfo.isOpen === true ? '✓ Open' : poi.hoursInfo.isOpen === false ? '✗ Closed' : '⏰'} {poi.hoursInfo.display}
+                                </span>
+                              </p>
+                            )}
+                            <p>📍 {distLabel}</p>
+                            {poi.distanceOffRoute >= 50 && (
+                              <p><span className={`detour-badge ${detourClass}`}>↗ {formatDetour(poi.distanceOffRoute)}</span></p>
+                            )}
+                            {poi.isPlannedStop && (
+                              <p style={{ color: '#d97706', fontWeight: 600 }}>⏱ Planned stop: {poi.stopMinutes} min</p>
+                            )}
+                            {poi.isPossibleStop && (
+                              <p style={{ color: '#1e40af', fontWeight: 600 }}>📌 Possible stop</p>
+                            )}
+                          </div>
+                          <div className="timeline-actions" style={{ marginTop: '12px' }}>
+                            <div className="stop-buttons">
+                              {!poi.isPlannedStop && !poi.isPossibleStop && (
+                                <>
+                                  <button
+                                    className="stop-btn"
+                                    onClick={() => togglePlannedStop(poi.id)}
+                                    disabled={plannedStopsCount >= MAX_PLANNED_STOPS}
+                                  >
+                                    + Planned
+                                  </button>
+                                  <button
+                                    className="stop-btn"
+                                    onClick={() => togglePossibleStop(poi.id)}
+                                  >
+                                    + Possible
+                                  </button>
+                                </>
+                              )}
+                              {poi.isPossibleStop && (
+                                <>
+                                  <button
+                                    className="stop-btn possible"
+                                    onClick={() => togglePossibleStop(poi.id)}
+                                  >
+                                    ✓ Possible
+                                  </button>
+                                  <button
+                                    className="stop-btn"
+                                    onClick={() => convertToPlanedStop(poi.id)}
+                                  >
+                                    → Planned
+                                  </button>
+                                </>
+                              )}
+                              {poi.isPlannedStop && (
+                                <>
+                                  <div className="stop-time-input">
+                                    <input
+                                      type="number"
+                                      min="5"
+                                      max="480"
+                                      step="5"
+                                      value={poi.stopMinutes}
+                                      onChange={(e) => updateStopTime(poi.id, e.target.value)}
+                                    />
+                                    <span>min</span>
+                                  </div>
+                                  <button
+                                    className="stop-btn planned"
+                                    onClick={() => togglePlannedStop(poi.id)}
+                                  >
+                                    ✓ Planned
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <div style={{ marginTop: '12px' }}>
+                            <a
+                              href={osmUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="resource-link"
+                            >
+                              OpenStreetMap <Icons.ExternalLink />
+                            </a>
+                            <a
+                              href={gmapsUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="resource-link gmaps"
+                            >
+                              Google Maps <Icons.ExternalLink />
+                            </a>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {activeView === 'grid' && filteredPOIs.length > 0 && viewMode === 'condensed' && (
+                  <div className="condensed-grid">
+                    {filteredPOIs.map(poi => {
+                      const cat = POI_CATEGORIES[poi.category];
+                      const iconHtml = poi.category === 'water' ? '💧' :
+                                      poi.category === 'camp' ? '⛺' :
+                                      poi.category === 'food' ? '🍴' :
+                                      poi.category === 'store' ? '🏪' : '📸';
+                      const distLabel = useMiles
+                        ? `${kmToMi(poi.distanceKm).toFixed(1)} mi`
+                        : `${poi.distanceKm.toFixed(1)} km`;
+                      const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${poi.coordinates[0]},${poi.coordinates[1]}`;
+
+                      return (
+                        <a
+                          key={poi.id}
+                          href={gmapsUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ textDecoration: 'none', color: 'inherit' }}
+                        >
+                          <div className={`mini-card ${poi.isPlannedStop ? 'planned' : ''} ${poi.isPossibleStop ? 'possible' : ''}`}>
+                            <div className="mini-card-header">
+                              <span>{iconHtml}</span>
+                              <span className="mini-card-name" title={poi.name}>{poi.name}</span>
+                            </div>
+                            <div className="mini-card-meta">
+                              {formatTime(poi.eta)} • {distLabel}
+                              {poi.distanceOffRoute >= 50 && ` • ↗${useMiles ? (mToFt(poi.distanceOffRoute) / 5280).toFixed(1) + 'mi' : (poi.distanceOffRoute / 1000).toFixed(1) + 'km'}`}
+                            </div>
+                            {poi.hoursInfo?.display && (
+                              <div className={`mini-card-hours ${poi.hoursInfo.isOpen === false ? 'closed' : ''}`}>
+                                {poi.hoursInfo.isOpen === true ? '✓' : poi.hoursInfo.isOpen === false ? '✗' : '⏰'} {poi.hoursInfo.display}
+                              </div>
+                            )}
+                          </div>
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+
+          {routeData && (
+            <div className="export-panel">
+              <div className={`export-dropdown ${showExport ? 'open' : ''}`}>
+                <div className="export-option" onClick={exportGPX}>
+                  <div className="export-option-icon">🗺️</div>
+                  <div>
+                    <div style={{ fontWeight: '500' }}>GPX with Waypoints</div>
+                    <div style={{ fontSize: '12px', color: '#6b7280' }}>For GPS devices</div>
+                  </div>
+                </div>
+                <div className="export-option" onClick={exportPDF}>
+                  <div className="export-option-icon">📄</div>
+                  <div>
+                    <div style={{ fontWeight: '500' }}>PDF Trip Plan</div>
+                    <div style={{ fontSize: '12px', color: '#6b7280' }}>Printable itinerary</div>
+                  </div>
+                </div>
+                <div className="export-option" onClick={exportCalendar}>
+                  <div className="export-option-icon">📅</div>
+                  <div>
+                    <div style={{ fontWeight: '500' }}>Calendar (.ics)</div>
+                    <div style={{ fontSize: '12px', color: '#6b7280' }}>Import to calendar</div>
+                  </div>
+                </div>
+              </div>
+              <button
+                className="btn btn-primary"
+                onClick={() => setShowExport(!showExport)}
+              >
+                <Icons.Download />
+                Export Plan
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    console.log('RouteScout: About to render App...');
+    try {
+      ReactDOM.createRoot(document.getElementById('root')).render(
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
+      );
+      console.log('RouteScout: App rendered successfully');
+    } catch (err) {
+      console.error('RouteScout: Render failed:', err);
+      document.getElementById('root').innerHTML = '<div style="padding:40px;text-align:center;"><h2 style="color:#dc2626;">Failed to load RouteScout</h2><p>' + err.message + '</p></div>';
+    }
+  </script>
+</body>
+</html>
