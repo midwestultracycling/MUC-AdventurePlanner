@@ -3,66 +3,85 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RouteScout - Cycling Adventure Planner</title>
+  <title>RouteScout - Adventure Cycling Resource Planner</title>
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Mishigami Brand Colors -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --color-primary: #00417C;
+      --color-primary-dark: #003366;
+      --color-secondary: #6B2424;
+      --color-secondary-light: #8B3434;
+      --color-accent: #277521;
+      --color-accent-light: #328A2A;
+      --color-bg: #FFFBF8;
+      --color-bg-alt: #F5F1EE;
+      --color-text: #051829;
+      --color-text-muted: #4A5568;
+      --color-border: #E2DED9;
+      --color-white: #FFFFFF;
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fafafa; color: #1a1a1a; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--color-bg); color: var(--color-text); }
 
     .container { max-width: 1400px; margin: 0 auto; padding: 0 24px; }
-    .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .card { background: var(--color-white); border-radius: 12px; box-shadow: 0 1px 3px rgba(5,24,41,0.08); }
     .btn { padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; font-weight: 500; font-size: 14px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
-    .btn-primary { background: #2563eb; color: white; }
-    .btn-primary:hover { background: #1d4ed8; }
-    .btn-secondary { background: #f3f4f6; color: #374151; }
-    .btn-secondary:hover { background: #e5e7eb; }
-    .btn-outline { background: transparent; border: 1px solid #e5e7eb; color: #374151; }
-    .btn-outline:hover { background: #f9fafb; border-color: #d1d5db; }
+    .btn-primary { background: var(--color-primary); color: white; }
+    .btn-primary:hover { background: var(--color-primary-dark); }
+    .btn-secondary { background: var(--color-bg-alt); color: var(--color-text); }
+    .btn-secondary:hover { background: var(--color-border); }
+    .btn-outline { background: transparent; border: 1px solid var(--color-border); color: var(--color-text); }
+    .btn-outline:hover { background: var(--color-bg); border-color: var(--color-text-muted); }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-sm { padding: 8px 16px; font-size: 13px; }
     .btn-xs { padding: 4px 10px; font-size: 12px; }
 
-    header { padding: 16px 0; border-bottom: 1px solid #e5e7eb; background: white; position: sticky; top: 0; z-index: 100; }
+    header { padding: 16px 0; border-bottom: 1px solid var(--color-border); background: var(--color-white); position: sticky; top: 0; z-index: 100; }
     .header-content { display: flex; align-items: center; justify-content: space-between; }
-    .logo { font-size: 22px; font-weight: 700; color: #1a1a1a; display: flex; align-items: center; gap: 10px; }
+    .logo { font-size: 22px; font-weight: 700; color: var(--color-primary); display: flex; align-items: center; gap: 10px; }
     .logo svg { width: 28px; height: 28px; }
     .header-actions { display: flex; gap: 12px; align-items: center; }
 
-    .unit-toggle { display: flex; align-items: center; gap: 8px; background: #f3f4f6; padding: 4px; border-radius: 8px; }
-    .unit-toggle button { padding: 6px 12px; border: none; background: transparent; cursor: pointer; font-size: 13px; font-weight: 500; color: #6b7280; border-radius: 6px; transition: all 0.2s; }
-    .unit-toggle button.active { background: white; color: #1a1a1a; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .unit-toggle { display: flex; align-items: center; gap: 8px; background: var(--color-bg-alt); padding: 4px; border-radius: 8px; }
+    .unit-toggle button { padding: 6px 12px; border: none; background: transparent; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--color-text-muted); border-radius: 6px; transition: all 0.2s; }
+    .unit-toggle button.active { background: var(--color-white); color: var(--color-text); box-shadow: 0 1px 3px rgba(5,24,41,0.1); }
 
     .input-section { padding: 40px 0; }
-    .input-tabs { display: flex; gap: 4px; margin-bottom: 24px; background: #f3f4f6; padding: 4px; border-radius: 10px; width: fit-content; }
-    .input-tab { padding: 10px 20px; border: none; background: transparent; cursor: pointer; font-size: 14px; font-weight: 500; color: #6b7280; border-radius: 8px; transition: all 0.2s; }
-    .input-tab.active { background: white; color: #1a1a1a; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .input-tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--color-bg-alt); padding: 4px; border-radius: 10px; width: fit-content; }
+    .input-tab { padding: 10px 20px; border: none; background: transparent; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--color-text-muted); border-radius: 8px; transition: all 0.2s; }
+    .input-tab.active { background: var(--color-white); color: var(--color-text); box-shadow: 0 1px 3px rgba(5,24,41,0.1); }
 
     .form-group { margin-bottom: 20px; }
-    .form-group label { display: block; font-size: 13px; font-weight: 500; color: #6b7280; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .form-group input, .form-group select { width: 100%; padding: 14px 16px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 15px; transition: border-color 0.2s; }
-    .form-group input:focus, .form-group select:focus { outline: none; border-color: #2563eb; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--color-text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-group input, .form-group select { width: 100%; padding: 14px 16px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 15px; transition: border-color 0.2s; }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--color-primary); }
 
-    .file-drop { border: 2px dashed #d1d5db; border-radius: 12px; padding: 48px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafafa; }
-    .file-drop:hover, .file-drop.dragover { border-color: #2563eb; background: #eff6ff; }
+    .file-drop { border: 2px dashed var(--color-border); border-radius: 12px; padding: 48px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--color-bg); }
+    .file-drop:hover, .file-drop.dragover { border-color: var(--color-primary); background: #E8F0F8; }
     .file-drop-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
-    .file-drop h3 { font-size: 16px; margin-bottom: 8px; }
-    .file-drop p { color: #6b7280; font-size: 14px; }
+    .file-drop h3 { font-size: 16px; margin-bottom: 8px; color: var(--color-text); }
+    .file-drop p { color: var(--color-text-muted); font-size: 14px; }
     .file-drop input { display: none; }
 
     .url-input-group { display: flex; gap: 12px; }
     .url-input-group input { flex: 1; }
 
-    .settings-row { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb; align-items: flex-end; }
+    .settings-row { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--color-border); align-items: flex-end; }
     .settings-row .form-group { flex: 0 0 auto; margin-bottom: 0; }
     .settings-row input[type="date"],
     .settings-row input[type="time"],
     .settings-row input[type="number"],
-    .settings-row select { height: 44px; padding: 0 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; width: auto; }
+    .settings-row select { height: 44px; padding: 0 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 14px; width: auto; }
     .settings-row input[type="date"] { width: 150px; }
     .settings-row input[type="time"] { width: 120px; }
     .settings-row .speed-input-group input[type="number"] { width: 70px; }
@@ -70,142 +89,150 @@
 
     .map-container { height: 500px; border-radius: 12px; overflow: hidden; margin-bottom: 0; position: relative; }
     #map { height: 100%; width: 100%; }
-    .map-legend { position: absolute; bottom: 20px; left: 20px; background: white; padding: 12px 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 1000; font-size: 12px; }
+    .map-legend { position: absolute; bottom: 20px; left: 20px; background: var(--color-white); padding: 12px 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(5,24,41,0.15); z-index: 1000; font-size: 12px; }
     .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
     .legend-item:last-child { margin-bottom: 0; }
     .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
 
-    .elevation-profile { background: white; border-radius: 0 0 12px 12px; padding: 16px; margin-bottom: 24px; border-top: 1px solid #e5e7eb; }
-    .elevation-profile h4 { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .elevation-profile { background: var(--color-white); border-radius: 0 0 12px 12px; padding: 16px; margin-bottom: 24px; border-top: 1px solid var(--color-border); }
+    .elevation-profile h4 { font-size: 13px; font-weight: 600; color: var(--color-text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
     .elevation-chart { position: relative; height: 120px; cursor: crosshair; }
     .elevation-canvas { width: 100%; height: 100%; }
-    .elevation-tooltip { position: absolute; background: #1a1a1a; color: white; padding: 6px 10px; border-radius: 6px; font-size: 12px; pointer-events: none; white-space: nowrap; transform: translateX(-50%); z-index: 10; }
-    .elevation-hover-dot { position: absolute; width: 10px; height: 10px; background: #ef4444; border: 2px solid white; border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 9; }
-    .elevation-stats { display: flex; gap: 24px; margin-top: 12px; font-size: 12px; color: #6b7280; }
+    .elevation-tooltip { position: absolute; background: var(--color-text); color: white; padding: 6px 10px; border-radius: 6px; font-size: 12px; pointer-events: none; white-space: nowrap; transform: translateX(-50%); z-index: 10; }
+    .elevation-hover-dot { position: absolute; width: 10px; height: 10px; background: var(--color-secondary); border: 2px solid white; border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); box-shadow: 0 2px 4px rgba(5,24,41,0.3); z-index: 9; }
+    .elevation-stats { display: flex; gap: 24px; margin-top: 12px; font-size: 12px; color: var(--color-text-muted); }
     .elevation-stats span { display: flex; align-items: center; gap: 4px; }
 
     .results-section { padding: 40px 0; }
     .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
     .results-tabs { display: flex; gap: 8px; }
-    .tab { padding: 10px 20px; background: transparent; border: none; cursor: pointer; font-size: 14px; font-weight: 500; color: #6b7280; border-radius: 8px; transition: all 0.2s; }
-    .tab.active { background: #2563eb; color: white; }
-    .tab:hover:not(.active) { background: #f3f4f6; }
+    .tab { padding: 10px 20px; background: transparent; border: none; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--color-text-muted); border-radius: 8px; transition: all 0.2s; }
+    .tab.active { background: var(--color-primary); color: white; }
+    .tab:hover:not(.active) { background: var(--color-bg-alt); }
 
     .timeline { position: relative; padding-left: 40px; }
-    .timeline::before { content: ''; position: absolute; left: 15px; top: 0; bottom: 0; width: 2px; background: #e5e7eb; }
+    .timeline::before { content: ''; position: absolute; left: 15px; top: 0; bottom: 0; width: 2px; background: var(--color-border); }
     .timeline-item { position: relative; padding: 12px 0; }
-    .timeline-item.planned-stop .timeline-content { background: #fef3c7; border: 1px solid #fcd34d; }
-    .timeline-marker { position: absolute; left: -33px; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; background: white; border: 2px solid #e5e7eb; }
-    .timeline-marker.water { background: #dbeafe; border-color: #2563eb; }
-    .timeline-marker.camp { background: #dcfce7; border-color: #16a34a; }
-    .timeline-marker.food { background: #fef3c7; border-color: #d97706; }
+    .timeline-item.planned-stop .timeline-content { background: #FFFBEB; border: 1px solid #F59E0B; }
+    .timeline-marker { position: absolute; left: -33px; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; background: var(--color-white); border: 2px solid var(--color-border); }
+    .timeline-marker.water { background: #E8F0F8; border-color: var(--color-primary); }
+    .timeline-marker.camp { background: #E8F5E8; border-color: var(--color-accent); }
+    .timeline-marker.food { background: #FFF8E8; border-color: #d97706; }
     .timeline-marker.scenic { background: #f3e8ff; border-color: #9333ea; }
-    .timeline-marker.store { background: #e0f2fe; border-color: #0284c7; }
-    .timeline-marker.start { background: #16a34a; border-color: #16a34a; color: white; }
-    .timeline-marker.end { background: #dc2626; border-color: #dc2626; color: white; }
+    .timeline-marker.store { background: #ECFEFF; border-color: #0891B2; }
+    .timeline-marker.start { background: var(--color-accent); border-color: var(--color-accent); color: white; }
+    .timeline-marker.end { background: var(--color-secondary); border-color: var(--color-secondary); color: white; }
 
-    .timeline-content { background: white; padding: 14px 18px; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .timeline-time { font-size: 12px; color: #6b7280; margin-bottom: 2px; font-weight: 500; }
-    .timeline-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
-    .timeline-meta { font-size: 13px; color: #6b7280; display: flex; flex-wrap: wrap; gap: 12px; }
+    .timeline-content { background: var(--color-white); padding: 14px 18px; border-radius: 10px; box-shadow: 0 1px 3px rgba(5,24,41,0.06); }
+    .timeline-time { font-size: 12px; color: var(--color-text-muted); margin-bottom: 2px; font-weight: 500; }
+    .timeline-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; color: var(--color-text); }
+    .timeline-meta { font-size: 13px; color: var(--color-text-muted); display: flex; flex-wrap: wrap; gap: 12px; }
     .timeline-meta span { display: flex; align-items: center; gap: 4px; }
     .timeline-actions { margin-top: 10px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
-    .detour-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background: #fef3c7; color: #92400e; border-radius: 4px; font-size: 11px; font-weight: 500; }
-    .detour-badge.far { background: #fee2e2; color: #991b1b; }
+    .detour-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background: #FFF8E8; color: #92400e; border-radius: 4px; font-size: 11px; font-weight: 500; }
+    .detour-badge.far { background: #FDE8E8; color: var(--color-secondary); }
 
-    .stop-time-input { display: inline-flex; align-items: center; gap: 6px; background: #f3f4f6; padding: 4px 8px; border-radius: 6px; }
-    .stop-time-input input { width: 50px; padding: 4px 6px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; text-align: center; }
-    .stop-time-input span { font-size: 12px; color: #6b7280; }
+    .stop-time-input { display: inline-flex; align-items: center; gap: 6px; background: var(--color-bg-alt); padding: 4px 8px; border-radius: 6px; }
+    .stop-time-input input { width: 50px; padding: 4px 6px; border: 1px solid var(--color-border); border-radius: 4px; font-size: 12px; text-align: center; }
+    .stop-time-input span { font-size: 12px; color: var(--color-text-muted); }
 
-    .planned-stop-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; background: #fcd34d; color: #78350f; border-radius: 12px; font-size: 11px; font-weight: 600; }
-    .possible-stop-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; background: #dbeafe; color: #1e40af; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .planned-stop-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; background: #F59E0B; color: #78350F; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .possible-stop-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; background: var(--color-primary); color: white; border-radius: 12px; font-size: 11px; font-weight: 600; }
 
-    .selected-stops-summary { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-top: 12px; }
-    .selected-stops-summary h4 { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 12px; }
-    .selected-stop-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f9fafb; border-radius: 8px; margin-bottom: 8px; font-size: 13px; }
+    .selected-stops-summary { background: var(--color-white); border: 1px solid var(--color-border); border-radius: 12px; padding: 16px; margin-top: 12px; }
+    .selected-stops-summary h4 { font-size: 13px; font-weight: 600; color: var(--color-text); margin-bottom: 12px; }
+    .selected-stop-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--color-bg-alt); border-radius: 8px; margin-bottom: 8px; font-size: 13px; }
     .selected-stop-item:last-child { margin-bottom: 0; }
-    .selected-stop-item.planned { background: #fffbeb; border: 1px solid #fcd34d; }
-    .selected-stop-item.possible { background: #eff6ff; border: 1px solid #bfdbfe; }
+    .selected-stop-item.planned { background: #FFFBEB; border: 1px solid #F59E0B; }
+    .selected-stop-item.possible { background: #E8F0F8; border: 1px solid var(--color-primary); }
     .selected-stop-info { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
     .selected-stop-name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
-    .selected-stop-meta { color: #6b7280; font-size: 12px; }
-    .selected-stop-remove { background: none; border: none; color: #9ca3af; cursor: pointer; padding: 4px; border-radius: 4px; }
-    .selected-stop-remove:hover { background: #fee2e2; color: #dc2626; }
+    .selected-stop-meta { color: var(--color-text-muted); font-size: 12px; }
+    .selected-stop-remove { background: none; border: none; color: var(--color-text-muted); cursor: pointer; padding: 4px; border-radius: 4px; }
+    .selected-stop-remove:hover { background: #FDE8E8; color: var(--color-secondary); }
+    .selected-stop-details { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .selected-stop-hours { font-size: 11px; color: var(--color-text-muted); }
+    .selected-stop-hours.open { color: var(--color-accent); }
+    .selected-stop-hours.closed { color: var(--color-secondary); }
+    .stop-time-editor { display: flex; align-items: center; gap: 2px; background: var(--color-bg-alt); border-radius: 6px; padding: 2px; }
+    .time-adjust-btn { width: 22px; height: 22px; border: none; background: var(--color-white); border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px; color: var(--color-text); display: flex; align-items: center; justify-content: center; }
+    .time-adjust-btn:hover { background: var(--color-border); }
+    .stop-time-value { font-size: 12px; font-weight: 500; min-width: 32px; text-align: center; }
 
     .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
     .resource-card { padding: 20px; position: relative; }
-    .resource-card.planned-stop { background: #fffbeb; border: 1px solid #fcd34d; }
-    .resource-card.possible-stop { background: #eff6ff; border: 1px solid #bfdbfe; }
+    .resource-card.planned-stop { background: #FFFBEB; border: 1px solid #F59E0B; }
+    .resource-card.possible-stop { background: #E8F0F8; border: 1px solid var(--color-primary); }
 
     .stop-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
-    .stop-btn { padding: 4px 10px; font-size: 11px; border-radius: 6px; border: 1px solid #d1d5db; background: white; cursor: pointer; transition: all 0.2s; }
-    .stop-btn:hover { border-color: #9ca3af; }
-    .stop-btn.planned { background: #fef3c7; border-color: #fcd34d; color: #78350f; }
-    .stop-btn.possible { background: #dbeafe; border-color: #93c5fd; color: #1e40af; }
+    .stop-btn { padding: 4px 10px; font-size: 11px; border-radius: 6px; border: 1px solid var(--color-border); background: var(--color-white); cursor: pointer; transition: all 0.2s; }
+    .stop-btn:hover { border-color: var(--color-text-muted); }
+    .stop-btn.planned { background: #FFFBEB; border-color: #F59E0B; color: #92400E; }
+    .stop-btn.possible { background: #E8F0F8; border-color: var(--color-primary); color: var(--color-primary); }
 
-    .detour-filter { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #f9fafb; border-radius: 8px; margin-top: 12px; }
-    .detour-filter label { font-size: 13px; font-weight: 500; color: #374151; white-space: nowrap; }
-    .detour-filter select { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
-    .detour-filter .refresh-btn { padding: 6px 12px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; }
-    .detour-filter .refresh-btn:hover { background: #1d4ed8; }
+    .detour-filter { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--color-bg-alt); border-radius: 8px; margin-top: 12px; }
+    .detour-filter label { font-size: 13px; font-weight: 500; color: var(--color-text); white-space: nowrap; }
+    .detour-filter select { padding: 6px 10px; border: 1px solid var(--color-border); border-radius: 6px; font-size: 13px; }
+    .detour-filter .refresh-btn { padding: 6px 12px; background: var(--color-primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; }
+    .detour-filter .refresh-btn:hover { background: var(--color-primary-dark); }
 
-    .location-text { font-size: 11px; color: #6b7280; font-style: italic; }
+    .location-text { font-size: 11px; color: var(--color-text-muted); font-style: italic; }
     .resource-card-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
     .resource-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-    .resource-icon.water { background: #dbeafe; }
-    .resource-icon.camp { background: #dcfce7; }
-    .resource-icon.food { background: #fef3c7; }
+    .resource-icon.water { background: #E8F0F8; }
+    .resource-icon.camp { background: #E8F5E8; }
+    .resource-icon.food { background: #FFF8E8; }
     .resource-icon.scenic { background: #f3e8ff; }
-    .resource-icon.store { background: #e0f2fe; }
-    .resource-name { font-weight: 600; font-size: 15px; line-height: 1.3; }
-    .resource-type { font-size: 12px; color: #6b7280; text-transform: capitalize; margin-top: 2px; }
-    .resource-details { font-size: 13px; color: #4b5563; }
+    .resource-icon.store { background: #ECFEFF; }
+    .resource-name { font-weight: 600; font-size: 15px; line-height: 1.3; color: var(--color-text); }
+    .resource-type { font-size: 12px; color: var(--color-text-muted); text-transform: capitalize; margin-top: 2px; }
+    .resource-details { font-size: 13px; color: var(--color-text-muted); }
     .resource-details p { margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
-    .resource-link { color: #2563eb; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 4px; margin-right: 12px; }
+    .resource-link { color: var(--color-primary); text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 4px; margin-right: 12px; }
     .resource-link:hover { text-decoration: underline; }
-    .resource-link.gmaps { color: #16a34a; }
+    .resource-link.gmaps { color: var(--color-accent); }
 
     .stats-bar { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-bottom: 32px; }
     @media (max-width: 1000px) { .stats-bar { grid-template-columns: repeat(3, 1fr); } }
     @media (max-width: 600px) { .stats-bar { grid-template-columns: repeat(2, 1fr); } }
     .stat-card { padding: 20px; text-align: center; }
-    .stat-value { font-size: 28px; font-weight: 700; color: #1a1a1a; }
-    .stat-label { font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
-    .stat-card.highlight { background: #fffbeb; border: 1px solid #fcd34d; }
+    .stat-value { font-size: 28px; font-weight: 700; color: var(--color-text); }
+    .stat-label { font-size: 12px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+    .stat-card.highlight { background: #FFFBEB; border: 1px solid #F59E0B; }
 
     .filter-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
-    .pill { padding: 8px 16px; border-radius: 20px; border: 1px solid #e5e7eb; background: white; cursor: pointer; font-size: 13px; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
-    .pill.active { background: #1a1a1a; color: white; border-color: #1a1a1a; }
-    .pill:hover:not(.active) { border-color: #9ca3af; }
-    .pill-count { background: rgba(0,0,0,0.1); padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+    .pill { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-white); cursor: pointer; font-size: 13px; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+    .pill.active { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+    .pill:hover:not(.active) { border-color: var(--color-text-muted); }
+    .pill-count { background: rgba(0,65,124,0.1); padding: 2px 8px; border-radius: 10px; font-size: 11px; }
     .pill.active .pill-count { background: rgba(255,255,255,0.2); }
 
     .export-panel { position: fixed; bottom: 24px; right: 24px; z-index: 200; }
-    .export-dropdown { position: absolute; bottom: 100%; right: 0; margin-bottom: 8px; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 8px; min-width: 220px; display: none; }
+    .export-dropdown { position: absolute; bottom: 100%; right: 0; margin-bottom: 8px; background: var(--color-white); border-radius: 12px; box-shadow: 0 10px 40px rgba(5,24,41,0.15); padding: 8px; min-width: 220px; display: none; }
     .export-dropdown.open { display: block; }
     .export-option { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
-    .export-option:hover { background: #f3f4f6; }
-    .export-option-icon { width: 32px; height: 32px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .export-option:hover { background: var(--color-bg-alt); }
+    .export-option-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--color-bg-alt); display: flex; align-items: center; justify-content: center; font-size: 16px; }
 
-    .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
-    .spinner { width: 48px; height: 48px; border: 3px solid #e5e7eb; border-top-color: #2563eb; border-radius: 50%; animation: spin 1s linear infinite; }
+    .loading-overlay { position: fixed; inset: 0; background: rgba(255,251,248,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+    .spinner { width: 48px; height: 48px; border: 3px solid var(--color-border); border-top-color: var(--color-primary); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-text { margin-top: 16px; font-size: 15px; color: #6b7280; }
+    .loading-text { margin-top: 16px; font-size: 15px; color: var(--color-text-muted); }
     .loading-steps { margin-top: 24px; text-align: left; }
-    .loading-step { display: flex; align-items: center; gap: 12px; padding: 8px 0; color: #9ca3af; font-size: 14px; }
-    .loading-step.active { color: #1a1a1a; }
-    .loading-step.done { color: #16a34a; }
+    .loading-step { display: flex; align-items: center; gap: 12px; padding: 8px 0; color: var(--color-text-muted); font-size: 14px; }
+    .loading-step.active { color: var(--color-text); }
+    .loading-step.done { color: var(--color-accent); }
     .loading-step-icon { width: 20px; text-align: center; }
 
     .empty-state { text-align: center; padding: 80px 40px; }
-    .empty-state h3 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
-    .empty-state p { color: #6b7280; max-width: 400px; margin: 0 auto; }
+    .empty-state h3 { font-size: 20px; font-weight: 600; margin-bottom: 8px; color: var(--color-text); }
+    .empty-state p { color: var(--color-text-muted); max-width: 400px; margin: 0 auto; }
 
     .alert { padding: 16px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 12px; }
-    .alert-info { background: #eff6ff; color: #1e40af; }
-    .alert-warning { background: #fef3c7; color: #92400e; }
-    .alert-error { background: #fee2e2; color: #991b1b; }
+    .alert-info { background: #E8F0F8; color: var(--color-primary); }
+    .alert-warning { background: #FFF8E8; color: #92400e; }
+    .alert-error { background: #FDE8E8; color: var(--color-secondary); }
     .alert-icon { font-size: 18px; flex-shrink: 0; }
     .alert-content { flex: 1; }
     .alert-title { font-weight: 600; margin-bottom: 4px; }
@@ -213,93 +240,158 @@
 
     .leaflet-popup-content-wrapper { border-radius: 10px; }
     .leaflet-popup-content { margin: 12px 16px; }
-    .popup-title { font-weight: 600; margin-bottom: 4px; }
-    .popup-meta { font-size: 12px; color: #6b7280; margin-bottom: 2px; }
+    .popup-title { font-weight: 600; margin-bottom: 4px; color: var(--color-text); }
+    .popup-meta { font-size: 12px; color: var(--color-text-muted); margin-bottom: 2px; }
     .popup-links { margin-top: 8px; display: flex; gap: 12px; }
-    .popup-link { color: #2563eb; font-size: 12px; text-decoration: none; }
+    .popup-link { color: var(--color-primary); font-size: 12px; text-decoration: none; }
     .popup-link:hover { text-decoration: underline; }
-    .popup-link.gmaps { color: #16a34a; }
+    .popup-link.gmaps { color: var(--color-accent); }
 
-    .route-info { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 16px 20px; border-radius: 10px; margin-bottom: 24px; }
+    .route-info { background: #E8F5E8; border: 1px solid var(--color-accent); padding: 16px 20px; border-radius: 10px; margin-bottom: 24px; }
     .route-info-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
     .route-info-icon { font-size: 24px; }
-    .route-info h3 { font-size: 16px; font-weight: 600; color: #166534; }
-    .route-info p { font-size: 14px; color: #166534; opacity: 0.8; }
+    .route-info h3 { font-size: 16px; font-weight: 600; color: var(--color-accent); }
+    .route-info p { font-size: 14px; color: var(--color-accent); opacity: 0.8; }
 
-    .history-section { margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb; }
-    .history-section h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #374151; }
+    .history-section { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--color-border); }
+    .history-section h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--color-text); }
     .history-list { display: grid; gap: 12px; }
-    .history-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: #f9fafb; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
-    .history-item:hover { background: #f3f4f6; }
+    .history-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: var(--color-bg-alt); border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+    .history-item:hover { background: var(--color-border); }
     .history-item-info { flex: 1; }
-    .history-item-name { font-weight: 500; font-size: 14px; margin-bottom: 2px; }
-    .history-item-meta { font-size: 12px; color: #6b7280; }
+    .history-item-name { font-weight: 500; font-size: 14px; margin-bottom: 2px; color: var(--color-text); }
+    .history-item-meta { font-size: 12px; color: var(--color-text-muted); }
     .history-item-actions { display: flex; gap: 8px; }
-    .history-delete { padding: 6px; border: none; background: transparent; cursor: pointer; color: #9ca3af; border-radius: 4px; }
-    .history-delete:hover { background: #fee2e2; color: #dc2626; }
+    .history-delete { padding: 6px; border: none; background: transparent; cursor: pointer; color: var(--color-text-muted); border-radius: 4px; }
+    .history-delete:hover { background: #FDE8E8; color: var(--color-secondary); }
 
-    .planned-stops-summary { background: #fffbeb; border: 1px solid #fcd34d; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-    .planned-stops-summary-text { font-size: 14px; color: #78350f; }
+    .planned-stops-summary { background: #FFFBEB; border: 1px solid #F59E0B; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .planned-stops-summary-text { font-size: 14px; color: #92400E; }
     .planned-stops-summary-text strong { font-weight: 600; }
 
     .mile-marker-icon {
-      background: white;
-      border: 2px solid #6b7280;
+      background: var(--color-white);
+      border: 2px solid var(--color-text-muted);
       border-radius: 4px;
       padding: 2px 6px;
       font-size: 10px;
       font-weight: 600;
-      color: #374151;
+      color: var(--color-text);
       white-space: nowrap;
     }
 
     .speed-input-group { display: flex; align-items: center; gap: 8px; }
-    .speed-input-group input[type="number"] { width: 70px; height: 44px; padding: 0 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; text-align: center; }
-    .speed-input-group input[type="number"]:focus { outline: none; border-color: #2563eb; }
-    .speed-input-group span { font-size: 13px; color: #6b7280; }
+    .speed-input-group input[type="number"] { width: 70px; height: 44px; padding: 0 10px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 14px; text-align: center; }
+    .speed-input-group input[type="number"]:focus { outline: none; border-color: var(--color-primary); }
+    .speed-input-group span { font-size: 13px; color: var(--color-text-muted); }
 
-    .route-controls { background: #f9fafb; border-radius: 10px; padding: 16px; margin-bottom: 24px; display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+    .route-controls { background: var(--color-bg-alt); border-radius: 10px; padding: 16px; margin-bottom: 24px; display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
     .route-controls .form-group { margin-bottom: 0; flex: 0 0 auto; }
     .route-controls input[type="date"],
     .route-controls input[type="time"],
     .route-controls input[type="number"],
-    .route-controls select { height: 44px; padding: 0 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
+    .route-controls select { height: 44px; padding: 0 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 14px; }
     .route-controls input[type="date"] { width: 140px; }
     .route-controls input[type="time"] { width: 110px; }
     .route-controls select { width: 100px; }
     .route-controls .speed-input-group input[type="number"] { width: 70px; }
-    .route-controls .refresh-btn { height: 44px; padding: 0 20px; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
-    .route-controls .refresh-btn:hover { background: #1d4ed8; }
+    .route-controls .refresh-btn { height: 44px; padding: 0 20px; background: var(--color-primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+    .route-controls .refresh-btn:hover { background: var(--color-primary-dark); }
 
     .condensed-timeline { padding-left: 20px; }
-    .condensed-timeline .mile-marker-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px dashed #e5e7eb; }
-    .condensed-timeline .mile-marker-row .mile-label { font-weight: 600; color: #374151; min-width: 60px; font-size: 13px; }
-    .condensed-timeline .mile-marker-row .eta-label { color: #6b7280; font-size: 12px; min-width: 70px; }
+    .condensed-timeline .mile-marker-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px dashed var(--color-border); }
+    .condensed-timeline .mile-marker-row .mile-label { font-weight: 600; color: var(--color-text); min-width: 60px; font-size: 13px; }
+    .condensed-timeline .mile-marker-row .eta-label { color: var(--color-text-muted); font-size: 12px; min-width: 70px; }
     .condensed-timeline .stops-in-range { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
-    .condensed-timeline .mini-stop { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; background: white; border: 1px solid #e5e7eb; border-radius: 12px; font-size: 11px; cursor: pointer; transition: all 0.2s; }
-    .condensed-timeline .mini-stop:hover { border-color: #9ca3af; background: #f3f4f6; }
-    .condensed-timeline .mini-stop.planned { background: #fef3c7; border-color: #fcd34d; }
-    .condensed-timeline .mini-stop.possible { background: #dbeafe; border-color: #93c5fd; }
+    .condensed-timeline .mini-stop { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; background: var(--color-white); border: 1px solid var(--color-border); border-radius: 12px; font-size: 11px; cursor: pointer; transition: all 0.2s; }
+    .condensed-timeline .mini-stop:hover { border-color: var(--color-text-muted); background: var(--color-bg-alt); }
+    .condensed-timeline .mini-stop.planned { background: #FFFBEB; border-color: #F59E0B; }
+    .condensed-timeline .mini-stop.possible { background: #E8F0F8; border-color: var(--color-primary); }
+    .condensed-timeline .mini-stop.expanded { border-color: var(--color-primary); box-shadow: 0 0 0 2px rgba(0, 65, 124, 0.2); }
 
     .condensed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
-    .condensed-grid .mini-card { padding: 10px 12px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
-    .condensed-grid .mini-card:hover { border-color: #9ca3af; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    .condensed-grid .mini-card.planned { background: #fffbeb; border-color: #fcd34d; }
-    .condensed-grid .mini-card.possible { background: #eff6ff; border-color: #bfdbfe; }
+    .condensed-grid .mini-card { padding: 10px 12px; background: var(--color-white); border: 1px solid var(--color-border); border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+    .condensed-grid .mini-card:hover { border-color: var(--color-text-muted); box-shadow: 0 2px 4px rgba(5,24,41,0.05); }
+    .condensed-grid .mini-card.planned { background: #FFFBEB; border-color: #F59E0B; }
+    .condensed-grid .mini-card.possible { background: #E8F0F8; border-color: var(--color-primary); }
+    .condensed-grid .mini-card.expanded { border-color: var(--color-primary); box-shadow: 0 0 0 2px rgba(0, 65, 124, 0.2); }
+
+    .poi-popover-overlay { position: fixed; inset: 0; background: rgba(5,24,41,0.3); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+    .poi-popover { background: var(--color-white); border-radius: 12px; box-shadow: 0 20px 50px rgba(5,24,41,0.2); max-width: 360px; width: 90%; max-height: 80vh; overflow-y: auto; }
+    .poi-popover-header { padding: 16px; border-bottom: 1px solid var(--color-border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .poi-popover-title { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; color: var(--color-text); }
+    .poi-popover-close { background: none; border: none; font-size: 20px; color: var(--color-text-muted); cursor: pointer; padding: 4px; line-height: 1; }
+    .poi-popover-close:hover { color: var(--color-text); }
+    .poi-popover-body { padding: 16px; }
+    .poi-popover-meta { display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--color-text-muted); margin-bottom: 16px; }
+    .poi-popover-meta-item { display: flex; align-items: center; gap: 8px; }
+    .poi-popover-actions { display: flex; gap: 8px; margin-bottom: 12px; }
+    .poi-popover-actions button { flex: 1; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+    .poi-popover-actions .btn-planned { background: #FFFBEB; border: 1px solid #F59E0B; color: #92400E; }
+    .poi-popover-actions .btn-planned:hover { background: #FEF3C7; }
+    .poi-popover-actions .btn-possible { background: #E8F0F8; border: 1px solid var(--color-primary); color: var(--color-primary); }
+    .poi-popover-actions .btn-possible:hover { background: #D8E8F8; }
+    .poi-popover-actions .btn-remove { background: #FDE8E8; border: 1px solid var(--color-secondary); color: var(--color-secondary); }
+    .poi-popover-actions .btn-remove:hover { background: #F5D8D8; }
+    .poi-popover-links { display: flex; gap: 12px; padding-top: 12px; border-top: 1px solid var(--color-border); }
+    .poi-popover-links a { font-size: 12px; color: var(--color-primary); text-decoration: none; display: flex; align-items: center; gap: 4px; }
+    .poi-popover-links a:hover { text-decoration: underline; }
+
+    .timeline-mile-marker { display: flex; align-items: center; padding: 8px 0 8px 44px; position: relative; }
+    .timeline-mile-marker::before { content: ''; position: absolute; left: 23px; top: 0; bottom: 0; width: 2px; background: var(--color-border); }
+    .timeline-mile-marker-dot { width: 8px; height: 8px; background: var(--color-border); border-radius: 50%; position: absolute; left: 20px; }
+    .timeline-mile-marker-label { font-size: 11px; color: var(--color-text-muted); font-weight: 500; }
+
+    .on-route-badge { font-size: 10px; color: var(--color-accent); background: #E8F5E8; padding: 2px 6px; border-radius: 4px; }
     .condensed-grid .mini-card-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
-    .condensed-grid .mini-card-name { font-weight: 500; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .condensed-grid .mini-card-meta { font-size: 10px; color: #6b7280; }
-    .condensed-grid .mini-card-hours { font-size: 10px; color: #16a34a; margin-top: 2px; }
-    .condensed-grid .mini-card-hours.closed { color: #dc2626; }
+    .condensed-grid .mini-card-name { font-weight: 500; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-text); }
+    .condensed-grid .mini-card-meta { font-size: 10px; color: var(--color-text-muted); }
+    .condensed-grid .mini-card-hours { font-size: 10px; color: var(--color-text-muted); margin-top: 2px; }
+    .condensed-grid .mini-card-hours span { color: var(--color-accent); }
+    .condensed-grid .mini-card-hours span.closed { color: var(--color-secondary); }
 
     .hours-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
-    .hours-badge.open { background: #dcfce7; color: #166534; }
-    .hours-badge.closed { background: #fee2e2; color: #991b1b; }
-    .hours-badge.unknown { background: #f3f4f6; color: #6b7280; }
+    .hours-badge.open { background: #E8F5E8; color: var(--color-accent); }
+    .hours-badge.closed { background: #FDE8E8; color: var(--color-secondary); }
+    .hours-badge.unknown { background: var(--color-bg-alt); color: var(--color-text-muted); }
+    .hours-display { font-size: 10px; color: var(--color-text-muted); margin-left: 6px; }
 
-    .view-toggle { display: flex; gap: 4px; background: #f3f4f6; padding: 3px; border-radius: 6px; }
-    .view-toggle button { padding: 4px 10px; border: none; background: transparent; cursor: pointer; font-size: 12px; color: #6b7280; border-radius: 4px; }
-    .view-toggle button.active { background: white; color: #1a1a1a; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+    .view-toggle { display: flex; gap: 4px; background: var(--color-bg-alt); padding: 3px; border-radius: 6px; }
+    .view-toggle button { padding: 4px 10px; border: none; background: transparent; cursor: pointer; font-size: 12px; color: var(--color-text-muted); border-radius: 4px; }
+    .view-toggle button.active { background: var(--color-white); color: var(--color-text); box-shadow: 0 1px 2px rgba(5,24,41,0.1); }
+
+    /* Featured Routes Homepage Styles */
+    .homepage { padding: 60px 0; }
+    .homepage-hero { text-align: center; margin-bottom: 48px; }
+    .homepage-hero h1 { font-size: 36px; font-weight: 700; color: var(--color-primary); margin-bottom: 12px; }
+    .homepage-hero p { font-size: 18px; color: var(--color-text-muted); max-width: 600px; margin: 0 auto; }
+    .featured-routes { margin-bottom: 48px; }
+    .featured-routes h2 { font-size: 24px; font-weight: 600; color: var(--color-text); margin-bottom: 24px; }
+    .featured-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; }
+    .featured-card { background: var(--color-white); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(5,24,41,0.08); transition: all 0.3s; cursor: pointer; border: 2px solid transparent; }
+    .featured-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(5,24,41,0.12); border-color: var(--color-primary); }
+    .featured-card-image { height: 180px; background-size: cover; background-position: center; position: relative; }
+    .featured-card-image::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 50%, rgba(5,24,41,0.7)); }
+    .featured-card-badge { position: absolute; top: 12px; left: 12px; background: var(--color-secondary); color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .featured-card-content { padding: 20px; }
+    .featured-card-title { font-size: 20px; font-weight: 700; color: var(--color-text); margin-bottom: 8px; }
+    .featured-card-stats { display: flex; gap: 16px; margin-bottom: 12px; }
+    .featured-card-stat { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--color-text-muted); }
+    .featured-card-stat strong { color: var(--color-text); font-weight: 600; }
+    .featured-card-desc { font-size: 14px; color: var(--color-text-muted); line-height: 1.5; margin-bottom: 16px; }
+    .featured-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .featured-card-gpx-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+    .featured-card-gpx-badge.available { background: #DEF7EC; color: #03543F; }
+    .featured-card-gpx-badge.pending { background: #FEF3C7; color: #92400E; }
+    .featured-card-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--color-primary); color: white; padding: 10px 20px; border-radius: 8px; font-weight: 500; font-size: 14px; text-decoration: none; transition: background 0.2s; }
+    .featured-card-btn:hover { background: var(--color-primary-dark); }
+    .upload-section { background: var(--color-bg-alt); border-radius: 16px; padding: 40px; text-align: center; }
+    .upload-section h3 { font-size: 20px; font-weight: 600; color: var(--color-text); margin-bottom: 8px; }
+    .upload-section p { font-size: 14px; color: var(--color-text-muted); margin-bottom: 24px; }
+    .powered-by { margin-top: 48px; text-align: center; padding-top: 24px; border-top: 1px solid var(--color-border); }
+    .powered-by span { font-size: 12px; color: var(--color-text-muted); }
+    .powered-by a { color: var(--color-primary); font-weight: 500; text-decoration: none; }
+    .powered-by a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -352,6 +444,165 @@
     const HISTORY_KEY = 'routescout_history';
     const MAX_HISTORY_ITEMS = 10;
     const UNITS_KEY = 'routescout_units';
+    const GOOGLE_HOURS_CACHE_KEY = 'routescout_google_hours_cache';
+    const GOOGLE_HOURS_CACHE_DAYS = 7;
+
+    // Google Places API Configuration
+    // To enable enhanced business hours, add your Google Places API key here
+    // Get a key at: https://console.cloud.google.com/apis/credentials
+    // Enable "Places API (New)" in your Google Cloud Console
+    const GOOGLE_PLACES_API_KEY = 'AIzaSyDeeOZV6ckz-RQXGZTB7nMyaQpdmh6fZQ0'; // Add your API key here
+
+    // Categories that benefit most from Google hours lookup (stores and food)
+    const GOOGLE_HOURS_CATEGORIES = ['store', 'food'];
+
+    // Google Places hours cache (localStorage with expiration)
+    const getGoogleHoursCache = () => {
+      try {
+        const cached = localStorage.getItem(GOOGLE_HOURS_CACHE_KEY);
+        if (!cached) return {};
+        const data = JSON.parse(cached);
+        const now = Date.now();
+        // Clean expired entries
+        const valid = {};
+        Object.entries(data).forEach(([key, entry]) => {
+          if (entry.expires > now) {
+            valid[key] = entry;
+          }
+        });
+        return valid;
+      } catch { return {}; }
+    };
+
+    const setGoogleHoursCache = (key, hours) => {
+      try {
+        const cache = getGoogleHoursCache();
+        cache[key] = {
+          hours,
+          expires: Date.now() + (GOOGLE_HOURS_CACHE_DAYS * 24 * 60 * 60 * 1000)
+        };
+        localStorage.setItem(GOOGLE_HOURS_CACHE_KEY, JSON.stringify(cache));
+      } catch {}
+    };
+
+    // Fetch business hours from Google Places API
+    const fetchGooglePlacesHours = async (poi) => {
+      if (!GOOGLE_PLACES_API_KEY) return null;
+
+      // Check cache first
+      const cacheKey = `${poi.name}-${poi.coordinates[0].toFixed(4)}-${poi.coordinates[1].toFixed(4)}`;
+      const cache = getGoogleHoursCache();
+      if (cache[cacheKey]) {
+        console.log(`Google hours cache hit: ${poi.name}`);
+        return cache[cacheKey].hours;
+      }
+
+      try {
+        // Step 1: Find the place using Text Search
+        const searchUrl = `https://places.googleapis.com/v1/places:searchText`;
+        const searchBody = {
+          textQuery: poi.name,
+          locationBias: {
+            circle: {
+              center: {
+                latitude: poi.coordinates[0],
+                longitude: poi.coordinates[1]
+              },
+              radius: 500.0
+            }
+          },
+          maxResultCount: 1
+        };
+
+        const searchResponse = await fetch(searchUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
+            'X-Goog-FieldMask': 'places.id,places.displayName,places.regularOpeningHours'
+          },
+          body: JSON.stringify(searchBody)
+        });
+
+        if (!searchResponse.ok) {
+          console.log(`Google Places search failed for ${poi.name}: ${searchResponse.status}`);
+          return null;
+        }
+
+        const searchData = await searchResponse.json();
+        const place = searchData.places?.[0];
+
+        if (!place) {
+          console.log(`No Google Place found for: ${poi.name}`);
+          setGoogleHoursCache(cacheKey, null); // Cache the miss
+          return null;
+        }
+
+        // Extract opening hours
+        const hours = place.regularOpeningHours;
+        if (hours) {
+          // Convert Google format to OSM-like format for consistency
+          const weekdayText = hours.weekdayDescriptions?.join('; ') || null;
+          console.log(`Google hours found for ${poi.name}: ${weekdayText}`);
+          setGoogleHoursCache(cacheKey, weekdayText);
+          return weekdayText;
+        }
+
+        setGoogleHoursCache(cacheKey, null);
+        return null;
+      } catch (err) {
+        console.log(`Google Places API error for ${poi.name}:`, err.message);
+        return null;
+      }
+    };
+
+    // Batch enhance POIs with Google Places hours
+    const enhancePOIsWithGoogleHours = async (pois, onProgress) => {
+      if (!GOOGLE_PLACES_API_KEY) {
+        console.log('Google Places API key not configured - skipping hours enhancement');
+        return pois;
+      }
+
+      // Only enhance POIs that:
+      // 1. Don't already have OSM hours
+      // 2. Are in priority categories (stores, food)
+      const poisNeedingHours = pois.filter(poi =>
+        !poi.openingHours &&
+        GOOGLE_HOURS_CATEGORIES.includes(poi.category)
+      );
+
+      if (poisNeedingHours.length === 0) {
+        console.log('No POIs need Google hours enhancement');
+        return pois;
+      }
+
+      // Limit to avoid excessive API costs (max 30 lookups per route)
+      const toEnhance = poisNeedingHours.slice(0, 30);
+      console.log(`Enhancing ${toEnhance.length} POIs with Google Places hours`);
+      onProgress?.(`Fetching business hours for ${toEnhance.length} locations...`);
+
+      // Process in batches of 5 with delay to respect rate limits
+      const batchSize = 5;
+      for (let i = 0; i < toEnhance.length; i += batchSize) {
+        const batch = toEnhance.slice(i, i + batchSize);
+        await Promise.all(batch.map(async (poi) => {
+          const hours = await fetchGooglePlacesHours(poi);
+          if (hours) {
+            poi.openingHours = hours;
+            poi.hoursSource = 'google';
+          }
+        }));
+        // Small delay between batches
+        if (i + batchSize < toEnhance.length) {
+          await new Promise(r => setTimeout(r, 200));
+        }
+      }
+
+      const enhanced = pois.filter(p => p.hoursSource === 'google').length;
+      console.log(`Enhanced ${enhanced} POIs with Google hours`);
+
+      return pois;
+    };
 
     // Icons
     const Icons = {
@@ -397,6 +648,26 @@
           <path d="M8 3l4 8 5-5 5 15H2L8 3z"/>
         </svg>
       ),
+      Route: () => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+          <circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 000-7h-11a3.5 3.5 0 010-7H15"/><circle cx="18" cy="5" r="3"/>
+        </svg>
+      ),
+      MapPin: () => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+      ),
+      ChevronRight: () => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      ),
+      Check: () => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      ),
       Water: () => <span>💧</span>,
       Camp: () => <span>⛺</span>,
       Food: () => <span>🍴</span>,
@@ -410,8 +681,8 @@
       water: {
         label: 'Water',
         icon: Icons.Water,
-        color: '#2563eb',
-        bgColor: '#dbeafe',
+        color: '#00417C', // Mishigami Deep Blue
+        bgColor: '#E8F0F8',
         osmTags: [
           'amenity=drinking_water',
           'amenity=water_point',
@@ -422,8 +693,8 @@
       camp: {
         label: 'Camping',
         icon: Icons.Camp,
-        color: '#16a34a',
-        bgColor: '#dcfce7',
+        color: '#277521', // Mishigami Green
+        bgColor: '#E8F5E8',
         osmTags: [
           'tourism=camp_site',
           'tourism=caravan_site',
@@ -435,7 +706,7 @@
         label: 'Food',
         icon: Icons.Food,
         color: '#d97706',
-        bgColor: '#fef3c7',
+        bgColor: '#FFF8E8',
         osmTags: [
           'amenity=restaurant',
           'amenity=cafe',
@@ -447,8 +718,8 @@
       store: {
         label: 'Convenience',
         icon: Icons.Store,
-        color: '#0284c7',
-        bgColor: '#e0f2fe',
+        color: '#0891B2', // Cyan
+        bgColor: '#ECFEFF',
         osmTags: [
           'shop=supermarket',
           'shop=convenience',
@@ -916,7 +1187,10 @@
         );
       }
 
-      return dedupedPois;
+      // Enhance POIs with Google Places hours (for stores/food without OSM hours)
+      const enhancedPois = await enhancePOIsWithGoogleHours(dedupedPois, onProgress);
+
+      return enhancedPois;
     };
 
     // Calculate POI details with planned stops and possible stops
@@ -975,22 +1249,84 @@
     const formatTime = (date) => date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
     const formatDate = (date) => date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
-    // Parse OSM opening_hours and check if open at given time
+    // Parse OSM or Google opening_hours and check if open at given time
     const parseOpeningHours = (hoursString, checkTime = new Date()) => {
       if (!hoursString) return { raw: null, isOpen: null, display: null };
 
       // Handle common simple formats
-      if (hoursString === '24/7') {
+      if (hoursString === '24/7' || hoursString.toLowerCase().includes('open 24 hours')) {
         return { raw: hoursString, isOpen: true, display: '24/7' };
       }
 
-      // Days of week mapping
-      const dayMap = { 'Mo': 1, 'Tu': 2, 'We': 3, 'Th': 4, 'Fr': 5, 'Sa': 6, 'Su': 0 };
+      // Days of week mapping (OSM format)
+      const dayMapOSM = { 'Mo': 1, 'Tu': 2, 'We': 3, 'Th': 4, 'Fr': 5, 'Sa': 6, 'Su': 0 };
+      // Days of week mapping (Google format)
+      const dayMapGoogle = {
+        'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4,
+        'friday': 5, 'saturday': 6, 'sunday': 0
+      };
       const dayOfWeek = checkTime.getDay();
       const currentTime = checkTime.getHours() * 60 + checkTime.getMinutes();
 
       try {
-        // Split by semicolon for different day ranges
+        // Check if this looks like Google format (contains full day names with colons)
+        const isGoogleFormat = /monday|tuesday|wednesday|thursday|friday|saturday|sunday/i.test(hoursString);
+
+        if (isGoogleFormat) {
+          // Parse Google format: "Monday: 9:00 AM – 5:00 PM; Tuesday: 9:00 AM – 5:00 PM"
+          const rules = hoursString.split(';').map(r => r.trim());
+          let isOpen = null;
+          let todayHours = null;
+
+          for (const rule of rules) {
+            // Match "Monday: 9:00 AM – 5:00 PM" or "Monday: Closed"
+            const match = rule.match(/^(\w+):\s*(.+)$/i);
+            if (!match) continue;
+
+            const [, dayName, hoursText] = match;
+            const dayIdx = dayMapGoogle[dayName.toLowerCase()];
+
+            if (dayIdx === dayOfWeek) {
+              if (hoursText.toLowerCase() === 'closed') {
+                todayHours = 'Closed';
+                isOpen = false;
+              } else {
+                // Parse time range like "9:00 AM – 5:00 PM" or "9:00 AM - 5:00 PM"
+                const timeMatch = hoursText.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?\s*[–-]\s*(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+                if (timeMatch) {
+                  let [, startH, startM, startPeriod, endH, endM, endPeriod] = timeMatch;
+                  startH = parseInt(startH);
+                  startM = parseInt(startM);
+                  endH = parseInt(endH);
+                  endM = parseInt(endM);
+
+                  // Convert to 24-hour
+                  if (startPeriod?.toUpperCase() === 'PM' && startH !== 12) startH += 12;
+                  if (startPeriod?.toUpperCase() === 'AM' && startH === 12) startH = 0;
+                  if (endPeriod?.toUpperCase() === 'PM' && endH !== 12) endH += 12;
+                  if (endPeriod?.toUpperCase() === 'AM' && endH === 12) endH = 0;
+
+                  const startMins = startH * 60 + startM;
+                  const endMins = endH * 60 + endM;
+
+                  todayHours = hoursText.trim();
+                  isOpen = currentTime >= startMins && currentTime < endMins;
+                } else {
+                  todayHours = hoursText.trim();
+                }
+              }
+              break;
+            }
+          }
+
+          return {
+            raw: hoursString,
+            isOpen,
+            display: todayHours || hoursString.substring(0, 30) + (hoursString.length > 30 ? '...' : '')
+          };
+        }
+
+        // OSM format parsing
         const rules = hoursString.split(';').map(r => r.trim());
         let isOpen = null;
         let todayHours = null;
@@ -1006,8 +1342,8 @@
           let appliesToday = false;
           if (days.includes('-')) {
             const [startDay, endDay] = days.split('-');
-            const startIdx = dayMap[startDay];
-            const endIdx = dayMap[endDay];
+            const startIdx = dayMapOSM[startDay];
+            const endIdx = dayMapOSM[endDay];
             if (startIdx !== undefined && endIdx !== undefined) {
               if (startIdx <= endIdx) {
                 appliesToday = dayOfWeek >= startIdx && dayOfWeek <= endIdx;
@@ -1019,7 +1355,7 @@
           } else {
             // Single days or comma-separated
             const dayList = days.split(',');
-            appliesToday = dayList.some(d => dayMap[d.trim()] === dayOfWeek);
+            appliesToday = dayList.some(d => dayMapOSM[d.trim()] === dayOfWeek);
           }
 
           if (appliesToday) {
@@ -1346,8 +1682,81 @@
       );
     }
 
+    // Featured Routes Data
+    // GPX URLs should point to your Netlify-hosted files (e.g., https://scout.midwestultracycling.com/routes/...)
+    const FEATURED_ROUTES = [
+      {
+        id: 'mishigami',
+        name: 'Mishigami',
+        distance: 1121,
+        elevation: 26000,
+        location: 'Chicago, IL, USA',
+        date: 'July 11th, 2026',
+        description: 'A 1,121-mile circumnavigation of Lake Michigan. This epic route follows the Great Lakes shoreline through forests, dunes, and charming small towns.',
+        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=400&fit=crop',
+        badge: 'Featured Race',
+        gpxUrl: '/routes/mishigami-main-event.gpx',
+        color: '#00417C',
+        hasGpx: true
+      },
+     {
+       id: 'mini-gami',
+       name: 'Mini-Gami',
+       distance: 484,
+       elevation: 10000,
+       location: 'Chicago, IL, USA',
+       date: 'July 11th, 2026',
+       description: 'The shorter sibling to Mishigami utilizing the ferry to cut across the lake.',
+       image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=400&fit=crop',
+       badge: 'Featured Race',
+       gpxUrl: '/routes/mini-gami.gpx',
+       color: '#00417C',
+       hasGpx: true
+     },
+      {
+        id: 'driftless-dagger',
+        name: 'Driftless Dagger',
+        distance: 550,
+        elevation: 40000,
+        location: 'Galena, IL, USA',
+        date: 'October 3, 2026',
+        description: 'Rugged gravel roads, steep ascents, and peaceful backcountry stretches meet the raw beauty of the Driftless Region. Death by a Thousand Cuts.',
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=400&fit=crop',
+        badge: 'Featured Race',
+        gpxUrl: '/routes/driftless-dagger.gpx',
+        color: '#6B2424',
+        hasGpx: true // GPX available but needs hosting
+      },
+      {
+        id: 'baby-dagger',
+        name: 'Baby Dagger',
+        distance: 237,
+        elevation: 20000,
+        location: 'Galena, IL',
+        date: 'October 3, 2026',
+        description: 'The shorter sibling of the Driftless Dagger. Same start/finish at Chestnut Mountain Resort, same challenging terrain, half the distance.',
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=400&fit=crop',
+        badge: 'Dagger Series',
+        gpxUrl: '/routes/baby-dagger.gpx', // TODO: Add URL when hosted
+        color: '#277521',
+        hasGpx: true
+      }
+    ];
+
+    // Fetch GPX from URL (for pre-loaded featured routes)
+    async function fetchGpxFromUrl(url) {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch GPX: ${response.status} ${response.statusText}`);
+      }
+      const text = await response.text();
+      return text;
+    }
+
     // Main App
     function App() {
+      const [currentView, setCurrentView] = useState('home'); // 'home' or 'planner'
+      const [selectedFeaturedRoute, setSelectedFeaturedRoute] = useState(null);
       const [inputMode, setInputMode] = useState('file');
       const [routeUrl, setRouteUrl] = useState('');
       const [useMiles, setUseMiles] = useState(() => {
@@ -1770,7 +2179,7 @@
 
             const routeCoords = routeData.coordinates.map(([lat, lon]) => [lat, lon]);
             const routeLine = L.polyline(routeCoords, {
-              color: '#2563eb',
+              color: '#00417C', // Mishigami Deep Blue
               weight: 4,
               opacity: 0.8
             }).addTo(map);
@@ -2084,101 +2493,258 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
         setShowExport(false);
       };
 
-      const exportPDF = () => {
+      const exportPDF = async () => {
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
+        const doc = new jsPDF('p', 'mm', 'a4'); // A4 portrait
+        const pageWidth = 210;
+        const pageHeight = 297;
+        const margin = 12;
+        const colWidth = (pageWidth - margin * 3) / 2; // Two columns
 
         // Only include selected stops in export
         const stopsToExport = selectedStops;
 
-        doc.setFontSize(18);
-        doc.text(routeData.name, 20, 20);
+        // Category colors for PDF
+        const categoryColors = {
+          water: { bg: [219, 234, 254], text: [30, 64, 175] },
+          camp: { bg: [220, 252, 231], text: [21, 128, 61] },
+          food: { bg: [254, 243, 199], text: [180, 83, 9] },
+          store: { bg: [243, 232, 255], text: [126, 34, 206] },
+          scenic: { bg: [254, 226, 226], text: [185, 28, 28] }
+        };
 
-        doc.setFontSize(11);
-        doc.setTextColor(100);
-        doc.text(`Generated by RouteScout`, 20, 28);
+        const categoryIcons = {
+          water: '💧',
+          camp: '⛺',
+          food: '🍴',
+          store: '🏪',
+          scenic: '📸'
+        };
 
-        doc.setTextColor(0);
-        doc.setFontSize(12);
-        doc.text(`Distance: ${formatDistance(routeData.distance)}`, 20, 42);
-        doc.text(`Elevation: ${formatElevation(routeData.elevation)}`, 20, 50);
-        doc.text(`Start: ${formatDate(getStartDateTime())} at ${formatTime(getStartDateTime())}`, 20, 58);
-        doc.text(`Est. Finish: ${formatTime(getEndDateTime())}`, 20, 66);
-        doc.text(`Avg Speed: ${formatSpeed(avgSpeed)}`, 20, 74);
-
-        let yOffset = 82;
-        if (plannedStopsCount > 0) {
-          doc.text(`Planned Stops: ${plannedStopsCount} (${totalStopMinutes} min total)`, 20, yOffset);
-          yOffset += 8;
-        }
-        if (possibleStopsCount > 0) {
-          doc.text(`Possible Stops: ${possibleStopsCount}`, 20, yOffset);
-          yOffset += 8;
-        }
-
+        // --- HEADER ---
+        doc.setFillColor(26, 26, 26);
+        doc.rect(0, 0, pageWidth, 18, 'F');
+        doc.setTextColor(255, 255, 255);
         doc.setFontSize(14);
-        doc.text('Selected Stops', 20, yOffset + 10);
+        doc.setFont(undefined, 'bold');
+        doc.text('RouteScout', margin, 12);
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'normal');
+        doc.text('Trip Plan', pageWidth - margin - 20, 12);
 
-        let y = yOffset + 22;
-        stopsToExport.forEach(poi => {
-          if (y > 270) {
-            doc.addPage();
-            y = 20;
+        // --- LEFT COLUMN: Route Details ---
+        let leftY = 26;
+
+        // Route name
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        const routeNameLines = doc.splitTextToSize(routeData.name, colWidth);
+        doc.text(routeNameLines, margin, leftY);
+        leftY += routeNameLines.length * 5 + 4;
+
+        // Stats box
+        doc.setFillColor(249, 250, 251);
+        doc.roundedRect(margin, leftY, colWidth, 32, 2, 2, 'F');
+
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(107, 114, 128);
+
+        const statsY = leftY + 6;
+        doc.text('Distance', margin + 4, statsY);
+        doc.text('Elevation', margin + 4, statsY + 8);
+        doc.text('Start', margin + 4, statsY + 16);
+        doc.text('Est. Finish', margin + 4, statsY + 24);
+
+        doc.setTextColor(0, 0, 0);
+        doc.setFont(undefined, 'bold');
+        doc.text(formatDistance(routeData.distance), margin + 28, statsY);
+        doc.text(formatElevation(routeData.elevation), margin + 28, statsY + 8);
+        doc.text(`${formatDate(getStartDateTime())} ${formatTime(getStartDateTime())}`, margin + 28, statsY + 16);
+        doc.text(formatTime(getEndDateTime()), margin + 28, statsY + 24);
+
+        // Second column of stats
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(107, 114, 128);
+        doc.text('Avg Speed', margin + colWidth/2 + 4, statsY);
+        doc.text('Planned Stops', margin + colWidth/2 + 4, statsY + 8);
+        doc.text('Possible Stops', margin + colWidth/2 + 4, statsY + 16);
+        doc.text('Stop Time', margin + colWidth/2 + 4, statsY + 24);
+
+        doc.setTextColor(0, 0, 0);
+        doc.setFont(undefined, 'bold');
+        doc.text(formatSpeed(avgSpeed), margin + colWidth/2 + 32, statsY);
+        doc.text(String(plannedStopsCount), margin + colWidth/2 + 32, statsY + 8);
+        doc.text(String(possibleStopsCount), margin + colWidth/2 + 32, statsY + 16);
+        doc.text(`${totalStopMinutes} min`, margin + colWidth/2 + 32, statsY + 24);
+
+        leftY += 38;
+
+        // --- RIGHT COLUMN: Map & Elevation ---
+        const rightX = margin + colWidth + margin;
+        let rightY = 26;
+
+        // Capture map
+        try {
+          const mapEl = document.getElementById('map');
+          if (mapEl) {
+            const mapCanvas = await html2canvas(mapEl, {
+              useCORS: true,
+              allowTaint: true,
+              scale: 2,
+              logging: false
+            });
+            const mapImgData = mapCanvas.toDataURL('image/jpeg', 0.85);
+            const mapHeight = 55;
+            doc.addImage(mapImgData, 'JPEG', rightX, rightY, colWidth, mapHeight);
+            rightY += mapHeight + 4;
           }
-          doc.setFontSize(10);
-          doc.setFont(undefined, 'bold');
-          const stopLabel = poi.isPlannedStop ? ` [PLANNED ${poi.stopMinutes}min]` : poi.isPossibleStop ? ' [POSSIBLE]' : '';
-          doc.text(`${formatTime(poi.eta)} - ${poi.name}${stopLabel}`, 25, y);
-          doc.setFont(undefined, 'normal');
-          doc.setFontSize(9);
-          doc.setTextColor(100);
-          doc.text(`${poi.type} | ${formatDistance(poi.distanceKm)} | ${formatDetour(poi.distanceOffRoute)}`, 25, y + 5);
-          doc.setTextColor(0);
-          y += 14;
-        });
+        } catch (e) {
+          console.log('Could not capture map:', e);
+          rightY += 4;
+        }
+
+        // Capture elevation profile
+        try {
+          const elevEl = document.querySelector('.elevation-profile');
+          if (elevEl) {
+            const elevCanvas = await html2canvas(elevEl, {
+              scale: 2,
+              logging: false,
+              backgroundColor: '#ffffff'
+            });
+            const elevImgData = elevCanvas.toDataURL('image/jpeg', 0.85);
+            const elevHeight = 28;
+            doc.addImage(elevImgData, 'JPEG', rightX, rightY, colWidth, elevHeight);
+            rightY += elevHeight + 4;
+          }
+        } catch (e) {
+          console.log('Could not capture elevation:', e);
+        }
+
+        // --- SELECTED STOPS (below both columns) ---
+        let stopsY = Math.max(leftY, rightY) + 4;
+
+        doc.setFillColor(26, 26, 26);
+        doc.rect(margin, stopsY, pageWidth - margin * 2, 7, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'bold');
+        doc.text(`Selected Stops (${stopsToExport.length})`, margin + 3, stopsY + 5);
+        stopsY += 10;
 
         if (stopsToExport.length === 0) {
-          doc.setFontSize(10);
-          doc.setTextColor(100);
-          doc.text('No stops selected. Mark stops as "Planned" or "Possible" to include them here.', 25, y);
+          doc.setFontSize(9);
+          doc.setTextColor(107, 114, 128);
+          doc.setFont(undefined, 'normal');
+          doc.text('No stops selected. Mark stops as "Planned" or "Possible" to include them.', margin + 3, stopsY + 4);
+        } else {
+          // Calculate how many stops can fit
+          const stopHeight = 9;
+          const availableHeight = pageHeight - stopsY - margin;
+          const stopsPerPage = Math.floor(availableHeight / stopHeight);
+          const maxFirstPageStops = Math.min(stopsToExport.length, stopsPerPage);
+
+          stopsToExport.forEach((poi, idx) => {
+            // Check if we need a new page
+            if (stopsY > pageHeight - margin - stopHeight) {
+              doc.addPage();
+              stopsY = margin;
+
+              // Add header on new page
+              doc.setFillColor(26, 26, 26);
+              doc.rect(margin, stopsY, pageWidth - margin * 2, 7, 'F');
+              doc.setTextColor(255, 255, 255);
+              doc.setFontSize(9);
+              doc.setFont(undefined, 'bold');
+              doc.text(`Selected Stops (continued)`, margin + 3, stopsY + 5);
+              stopsY += 10;
+            }
+
+            const colors = categoryColors[poi.category] || categoryColors.water;
+
+            // Stop row background
+            doc.setFillColor(colors.bg[0], colors.bg[1], colors.bg[2]);
+            doc.roundedRect(margin, stopsY, pageWidth - margin * 2, stopHeight - 1, 1, 1, 'F');
+
+            // Category icon (emoji approximation - use first letter)
+            doc.setFontSize(7);
+            doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
+            const icon = categoryIcons[poi.category] || '📍';
+            doc.text(icon, margin + 2, stopsY + 5.5);
+
+            // Time
+            doc.setFontSize(8);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(0, 0, 0);
+            doc.text(formatTime(poi.eta), margin + 10, stopsY + 5.5);
+
+            // Name
+            doc.setFont(undefined, 'normal');
+            const nameMaxWidth = 50;
+            let displayName = poi.name;
+            if (doc.getTextWidth(displayName) > nameMaxWidth) {
+              while (doc.getTextWidth(displayName + '...') > nameMaxWidth && displayName.length > 0) {
+                displayName = displayName.slice(0, -1);
+              }
+              displayName += '...';
+            }
+            doc.text(displayName, margin + 26, stopsY + 5.5);
+
+            // Type badge
+            doc.setFontSize(7);
+            doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
+            doc.text(poi.type, margin + 80, stopsY + 5.5);
+
+            // Distance
+            doc.setTextColor(107, 114, 128);
+            doc.text(formatDistance(poi.distanceKm), margin + 115, stopsY + 5.5);
+
+            // Detour
+            doc.text(formatDetour(poi.distanceOffRoute), margin + 135, stopsY + 5.5);
+
+            // Stop type & time
+            if (poi.isPlannedStop) {
+              doc.setFillColor(251, 191, 36);
+              doc.roundedRect(margin + 155, stopsY + 1.5, 18, 5, 1, 1, 'F');
+              doc.setTextColor(0, 0, 0);
+              doc.setFontSize(6);
+              doc.text(`${poi.stopMinutes}min`, margin + 156, stopsY + 5);
+            } else if (poi.isPossibleStop) {
+              doc.setFillColor(191, 219, 254);
+              doc.roundedRect(margin + 155, stopsY + 1.5, 18, 5, 1, 1, 'F');
+              doc.setTextColor(30, 64, 175);
+              doc.setFontSize(6);
+              doc.text('possible', margin + 156, stopsY + 5);
+            }
+
+            // Hours info
+            if (poi.hoursInfo?.display) {
+              doc.setFontSize(6);
+              if (poi.hoursInfo.isOpen === true) {
+                doc.setTextColor(5, 150, 105);
+              } else if (poi.hoursInfo.isOpen === false) {
+                doc.setTextColor(220, 38, 38);
+              } else {
+                doc.setTextColor(107, 114, 128);
+              }
+              const hoursText = poi.hoursInfo.display.length > 12
+                ? poi.hoursInfo.display.substring(0, 12) + '...'
+                : poi.hoursInfo.display;
+              doc.text(hoursText, margin + 175, stopsY + 5.5);
+            }
+
+            stopsY += stopHeight;
+          });
         }
 
+        // Footer on last page
+        doc.setFontSize(7);
+        doc.setTextColor(156, 163, 175);
+        doc.text('Generated by RouteScout • routescout.app', margin, pageHeight - 6);
+
         doc.save(`${routeData.name.replace(/[^a-z0-9]/gi, '-')}-trip-plan.pdf`);
-        setShowExport(false);
-      };
-
-      const exportCalendar = () => {
-        // Only include selected stops in export
-        const stopsToExport = selectedStops;
-
-        const events = stopsToExport.map(poi => {
-          const duration = poi.isPlannedStop ? poi.stopMinutes : 15;
-          const start = poi.eta.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-          const endTime = new Date(poi.eta.getTime() + duration * 60 * 1000);
-          const end = endTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-
-          return `BEGIN:VEVENT
-DTSTART:${start}
-DTEND:${end}
-SUMMARY:${poi.isPlannedStop ? '[PLANNED] ' : '[POSSIBLE] '}${poi.name}
-DESCRIPTION:${poi.type} - ${formatDistance(poi.distanceKm)} - ${formatDetour(poi.distanceOffRoute)}${poi.isPlannedStop ? '\\nPlanned stop: ' + poi.stopMinutes + ' min' : '\\nPossible stop (no time allocated)'}
-LOCATION:${poi.coordinates[0]},${poi.coordinates[1]}
-END:VEVENT`;
-        }).join('\n');
-
-        const ical = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//RouteScout//Cycling Planner//EN
-${events}
-END:VCALENDAR`;
-
-        const blob = new Blob([ical], { type: 'text/calendar' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${routeData.name.replace(/[^a-z0-9]/gi, '-')}-trip-plan.ics`;
-        a.click();
-        URL.revokeObjectURL(url);
         setShowExport(false);
       };
 
@@ -2196,11 +2762,385 @@ END:VCALENDAR`;
         ? `${kmToMi(avgSpeed).toFixed(1)} mph`
         : `${avgSpeed} km/h`;
 
+      // Get expanded POI for popover
+      const expandedPoi = expandedStopId ? enrichedPOIs.find(p => p.id === expandedStopId) : null;
+
+      // POI Popover component for condensed views
+      const renderPoiPopover = () => {
+        if (!expandedPoi) return null;
+
+        const cat = POI_CATEGORIES[expandedPoi.category];
+        const iconHtml = expandedPoi.category === 'water' ? '💧' :
+                        expandedPoi.category === 'camp' ? '⛺' :
+                        expandedPoi.category === 'food' ? '🍴' :
+                        expandedPoi.category === 'store' ? '🏪' : '📸';
+        const distLabel = useMiles
+          ? `Mile ${kmToMi(expandedPoi.distanceKm).toFixed(1)}`
+          : `Km ${expandedPoi.distanceKm.toFixed(1)}`;
+        const osmUrl = `https://www.openstreetmap.org/${expandedPoi.osmType}/${expandedPoi.osmId}`;
+        const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${expandedPoi.coordinates[0]},${expandedPoi.coordinates[1]}`;
+
+        return (
+          <div className="poi-popover-overlay" onClick={() => setExpandedStopId(null)}>
+            <div className="poi-popover" onClick={e => e.stopPropagation()}>
+              <div className="poi-popover-header">
+                <div className="poi-popover-title">
+                  <span>{iconHtml}</span>
+                  {expandedPoi.name}
+                </div>
+                <button className="poi-popover-close" onClick={() => setExpandedStopId(null)}>×</button>
+              </div>
+              <div className="poi-popover-body">
+                <div className="poi-popover-meta">
+                  <div className="poi-popover-meta-item">
+                    <span>🏷️</span>
+                    <span>{expandedPoi.type}</span>
+                  </div>
+                  <div className="poi-popover-meta-item">
+                    <span>🕐</span>
+                    <span>ETA: {formatTime(expandedPoi.eta)}</span>
+                  </div>
+                  <div className="poi-popover-meta-item">
+                    <span>📍</span>
+                    <span>{distLabel}</span>
+                  </div>
+                  <div className="poi-popover-meta-item">
+                    <span>↗️</span>
+                    <span>{expandedPoi.distanceOffRoute < 50 ? <span className="on-route-badge">On Route</span> : formatDetour(expandedPoi.distanceOffRoute)}</span>
+                  </div>
+                  {expandedPoi.location && (
+                    <div className="poi-popover-meta-item">
+                      <span>🗺️</span>
+                      <span>{expandedPoi.location}</span>
+                    </div>
+                  )}
+                  {expandedPoi.hoursInfo?.display && (
+                    <div className="poi-popover-meta-item">
+                      <span>🕐</span>
+                      <span>
+                        <span className={`hours-badge ${expandedPoi.hoursInfo.isOpen === true ? 'open' : expandedPoi.hoursInfo.isOpen === false ? 'closed' : 'unknown'}`}>
+                          {expandedPoi.hoursInfo.isOpen === true ? '✓ Open' : expandedPoi.hoursInfo.isOpen === false ? '✗ Closed' : '⏰ Unknown'}
+                        </span>
+                        <span className="hours-display">Hours: {expandedPoi.hoursInfo.display}</span>
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="poi-popover-actions">
+                  {!expandedPoi.isPlannedStop && !expandedPoi.isPossibleStop && (
+                    <>
+                      <button
+                        className="btn-planned"
+                        onClick={() => {
+                          setPlannedStops(prev => ({ ...prev, [expandedPoi.id]: 15 }));
+                          setExpandedStopId(null);
+                        }}
+                      >
+                        + Planned Stop
+                      </button>
+                      <button
+                        className="btn-possible"
+                        onClick={() => {
+                          setPossibleStops(prev => ({ ...prev, [expandedPoi.id]: true }));
+                          setExpandedStopId(null);
+                        }}
+                      >
+                        + Possible
+                      </button>
+                    </>
+                  )}
+                  {expandedPoi.isPlannedStop && (
+                    <button
+                      className="btn-remove"
+                      onClick={() => {
+                        setPlannedStops(prev => {
+                          const next = { ...prev };
+                          delete next[expandedPoi.id];
+                          return next;
+                        });
+                        setExpandedStopId(null);
+                      }}
+                    >
+                      Remove Planned Stop
+                    </button>
+                  )}
+                  {expandedPoi.isPossibleStop && (
+                    <>
+                      <button
+                        className="btn-planned"
+                        onClick={() => {
+                          setPossibleStops(prev => {
+                            const next = { ...prev };
+                            delete next[expandedPoi.id];
+                            return next;
+                          });
+                          setPlannedStops(prev => ({ ...prev, [expandedPoi.id]: 15 }));
+                          setExpandedStopId(null);
+                        }}
+                      >
+                        Convert to Planned
+                      </button>
+                      <button
+                        className="btn-remove"
+                        onClick={() => {
+                          setPossibleStops(prev => {
+                            const next = { ...prev };
+                            delete next[expandedPoi.id];
+                            return next;
+                          });
+                          setExpandedStopId(null);
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                <div className="poi-popover-links">
+                  <a href={osmUrl} target="_blank" rel="noopener noreferrer">
+                    OSM ↗
+                  </a>
+                  <a href={gmapsUrl} target="_blank" rel="noopener noreferrer">
+                    Google Maps ↗
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // Handle selecting a featured route
+      const handleSelectFeaturedRoute = async (route) => {
+        setSelectedFeaturedRoute(route);
+        setCurrentView('planner');
+
+        // If the route has a GPX URL, automatically load it
+        if (route.gpxUrl) {
+          await loadFeaturedRouteGpx(route);
+        }
+      };
+
+      // Load GPX for a featured route from URL
+      const loadFeaturedRouteGpx = async (route) => {
+        if (!route.gpxUrl) {
+          console.log('No GPX URL for route:', route.name);
+          return;
+        }
+
+        if (searchCategories.length === 0) {
+          setError('Please select at least one resource type to search.');
+          return;
+        }
+
+        setError(null);
+        setIsLoading(true);
+        setPlannedStops({});
+        setPossibleStops({});
+        setRouteData(null);
+        setPois([]);
+
+        setLoadingSteps([
+          { id: 'fetch', label: `Fetching ${route.name} route data...`, status: 'active' },
+          { id: 'parse', label: 'Parsing GPX file', status: 'pending' },
+          { id: 'pois', label: 'Finding resources along route', status: 'pending' },
+          { id: 'process', label: 'Processing results', status: 'pending' }
+        ]);
+
+        try {
+          // Fetch GPX from URL
+          const gpxText = await fetchGpxFromUrl(route.gpxUrl);
+
+          setLoadingSteps(prev => prev.map(s =>
+            s.id === 'fetch' ? { ...s, status: 'done', label: `Downloaded ${route.name} route` } :
+            s.id === 'parse' ? { ...s, status: 'active' } : s
+          ));
+
+          // Allow UI to update
+          await new Promise(resolve => setTimeout(resolve, 50));
+
+          const parsedRoute = parseGPX(gpxText);
+
+          if (parsedRoute.coordinates.length < 2) {
+            throw new Error('GPX file contains no valid track points');
+          }
+
+          const routeInfo = `${parsedRoute.distance.toFixed(0)}km route with ${parsedRoute.totalPoints || parsedRoute.coordinates.length} track points`;
+          console.log(`Parsed: ${routeInfo}`);
+
+          setRouteData(parsedRoute);
+
+          setLoadingSteps(prev => prev.map(s =>
+            s.id === 'parse' ? { ...s, status: 'done', label: `Parsed ${routeInfo}` } :
+            s.id === 'pois' ? { ...s, status: 'active', label: 'Finding resources along route (this may take a minute for long routes)...' } : s
+          ));
+
+          // Allow UI to update before POI fetch
+          await new Promise(resolve => setTimeout(resolve, 50));
+
+          let rawPois = [];
+          try {
+            rawPois = await fetchPOIs(parsedRoute.coordinates, setLoadingStep, searchCategories);
+          } catch (poiErr) {
+            console.error('POI fetch error:', poiErr);
+            setError('Could not fetch POIs from OpenStreetMap. The route is loaded - you can try refreshing to fetch POIs again.');
+          }
+
+          setLoadingSteps(prev => prev.map(s =>
+            s.id === 'pois' ? { ...s, status: 'done', label: `Found ${rawPois.length} resources` } :
+            s.id === 'process' ? { ...s, status: 'active' } : s
+          ));
+
+          setPois(rawPois);
+          setActiveFilters([...searchCategories]);
+          setLoadingSteps(prev => prev.map(s => ({ ...s, status: 'done' })));
+
+          // Save to history with route name
+          const updatedHistory = saveToHistory(parsedRoute, rawPois);
+          setHistory(updatedHistory);
+
+        } catch (err) {
+          console.error('Featured route loading error:', err);
+          setError(err.message || `Failed to load ${route.name} route`);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      // Go back to homepage
+      const goToHomepage = () => {
+        setCurrentView('home');
+        setSelectedFeaturedRoute(null);
+        resetApp();
+      };
+
+      // Homepage View
+      if (currentView === 'home') {
+        return (
+          <div>
+            <header>
+              <div className="container header-content">
+                <div className="logo">
+                  <Icons.Bike />
+                  RouteScout
+                </div>
+                <div className="header-actions">
+                  <div className="unit-toggle">
+                    <button
+                      className={useMiles ? 'active' : ''}
+                      onClick={() => setUseMiles(true)}
+                    >
+                      Miles
+                    </button>
+                    <button
+                      className={!useMiles ? 'active' : ''}
+                      onClick={() => setUseMiles(false)}
+                    >
+                      Km
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </header>
+
+            <section className="homepage">
+              <div className="container">
+                <div className="homepage-hero">
+                  <h1>Scout Your Next Adventure</h1>
+                  <p>
+                    Discover water sources, camping spots, food stops, and resupply points along your cycling route.
+                    Built for ultra-distance and bikepacking adventures.
+                  </p>
+                </div>
+
+                <div className="featured-routes">
+                  <h2>Featured Routes</h2>
+                  <div className="featured-grid">
+                    {FEATURED_ROUTES.map(route => (
+                      <div
+                        key={route.id}
+                        className="featured-card"
+                        onClick={() => handleSelectFeaturedRoute(route)}
+                      >
+                        <div
+                          className="featured-card-image"
+                          style={{
+                            backgroundImage: `url(${route.image})`,
+                            backgroundColor: route.color
+                          }}
+                        >
+                          <span className="featured-card-badge">{route.badge}</span>
+                        </div>
+                        <div className="featured-card-content">
+                          <h3 className="featured-card-title">{route.name}</h3>
+                          <div className="featured-card-stats">
+                            <div className="featured-card-stat">
+                              <Icons.Route />
+                              <strong>{route.distance}</strong> {useMiles ? 'mi' : 'km'}
+                            </div>
+                            <div className="featured-card-stat">
+                              <Icons.Mountain />
+                              <strong>{(route.elevation / 1000).toFixed(0)}k</strong> ft gain
+                            </div>
+                            <div className="featured-card-stat">
+                              <Icons.MapPin />
+                              {route.location}
+                            </div>
+                          </div>
+                          <p className="featured-card-desc">{route.description}</p>
+                          <div className="featured-card-footer">
+                            {route.gpxUrl ? (
+                              <span className="featured-card-gpx-badge available">
+                                <Icons.Check /> Official Route Ready
+                              </span>
+                            ) : route.hasGpx ? (
+                              <span className="featured-card-gpx-badge pending">
+                                <Icons.Upload /> GPX Available
+                              </span>
+                            ) : null}
+                            <span className="featured-card-btn">
+                              Scout This Route
+                              <Icons.ChevronRight />
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="upload-section">
+                  <h3>Have Your Own Route?</h3>
+                  <p>Upload a GPX file to discover resources along any cycling route.</p>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => setCurrentView('planner')}
+                  >
+                    <Icons.Upload />
+                    Upload GPX File
+                  </button>
+                </div>
+
+                <div className="powered-by">
+                  <span>A tool by </span>
+                  <a href="https://www.midwestultracycling.com" target="_blank" rel="noopener noreferrer">
+                    Midwest Ultra Cycling
+                  </a>
+                </div>
+              </div>
+            </section>
+          </div>
+        );
+      }
+
+      // Planner View
       return (
         <div>
           <header>
             <div className="container header-content">
-              <div className="logo">
+              <div className="logo" style={{ cursor: 'pointer' }} onClick={goToHomepage}>
                 <Icons.Bike />
                 RouteScout
               </div>
@@ -2224,6 +3164,9 @@ END:VCALENDAR`;
                     New Route
                   </button>
                 )}
+                <button className="btn btn-secondary btn-sm" onClick={goToHomepage}>
+                  ← Home
+                </button>
               </div>
             </div>
           </header>
@@ -2248,10 +3191,26 @@ END:VCALENDAR`;
           {!routeData && (
             <section className="input-section">
               <div className="container">
+                {selectedFeaturedRoute && (
+                  <div className="route-info" style={{ marginBottom: '24px', background: '#E8F0F8', borderColor: 'var(--color-primary)' }}>
+                    <div className="route-info-header">
+                      <span className="route-info-icon">🚴</span>
+                      <h3 style={{ color: 'var(--color-primary)' }}>Scouting: {selectedFeaturedRoute.name}</h3>
+                    </div>
+                    <p style={{ color: 'var(--color-primary)' }}>
+                      {selectedFeaturedRoute.distance} miles • {(selectedFeaturedRoute.elevation / 1000).toFixed(0)}k ft elevation • {selectedFeaturedRoute.location}
+                    </p>
+                  </div>
+                )}
                 <div className="card" style={{ padding: '32px' }}>
-                  <h2 style={{ marginBottom: '8px', fontSize: '24px' }}>Plan Your Adventure</h2>
-                  <p style={{ color: '#6b7280', marginBottom: '24px' }}>
-                    Upload a GPX file to discover water, camping, food, and more along your route.
+                  <h2 style={{ marginBottom: '8px', fontSize: '24px', color: 'var(--color-text)' }}>
+                    {selectedFeaturedRoute ? `Configure Your ${selectedFeaturedRoute.name} Scout` : 'Plan Your Adventure'}
+                  </h2>
+                  <p style={{ color: 'var(--color-text-muted)', marginBottom: '24px' }}>
+                    {selectedFeaturedRoute
+                      ? 'Set your start date and pace, then upload the official GPX to discover resources along the route.'
+                      : 'Upload a GPX file to discover water, camping, food, and more along your route.'
+                    }
                   </p>
 
                   {error && (
@@ -2343,7 +3302,49 @@ END:VCALENDAR`;
                     )}
                   </div>
 
-                  <div className="input-tabs" style={{ marginTop: '24px' }}>
+                  {/* Official Route Load Button for Featured Routes */}
+                  {selectedFeaturedRoute && selectedFeaturedRoute.gpxUrl && (
+                    <div style={{ marginTop: '24px', marginBottom: '16px' }}>
+                      <button
+                        className="btn btn-primary"
+                        onClick={() => loadFeaturedRouteGpx(selectedFeaturedRoute)}
+                        disabled={isLoading}
+                        style={{
+                          width: '100%',
+                          padding: '16px 24px',
+                          fontSize: '16px',
+                          fontWeight: '600',
+                          background: 'var(--color-primary)',
+                          borderRadius: '12px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '10px'
+                        }}
+                      >
+                        <Icons.Route />
+                        {isLoading ? 'Loading Route...' : `Load Official ${selectedFeaturedRoute.name} Route`}
+                      </button>
+                      <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '12px', textAlign: 'center' }}>
+                        Or upload your own GPX file below to scout a different route
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Notice for Featured Routes without hosted GPX */}
+                  {selectedFeaturedRoute && !selectedFeaturedRoute.gpxUrl && selectedFeaturedRoute.hasGpx && (
+                    <div className="alert" style={{ marginTop: '24px', marginBottom: '16px', background: '#EEF5FF', borderColor: 'var(--color-primary)' }}>
+                      <span className="alert-icon">📋</span>
+                      <div className="alert-content">
+                        <div className="alert-text" style={{ color: 'var(--color-primary)' }}>
+                          <strong>Upload the official {selectedFeaturedRoute.name} GPX</strong><br/>
+                          Download the official route from the race website, then upload it below to scout resources.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="input-tabs" style={{ marginTop: selectedFeaturedRoute ? '0' : '24px' }}>
                     <button
                       className={`input-tab ${inputMode === 'file' ? 'active' : ''}`}
                       onClick={() => setInputMode('file')}
@@ -2508,14 +3509,41 @@ END:VCALENDAR`;
                           <span style={{ fontSize: '14px' }}>
                             {poi.category === 'water' ? '💧' : poi.category === 'camp' ? '⛺' : poi.category === 'food' ? '🍴' : poi.category === 'store' ? '🏪' : '📸'}
                           </span>
-                          <span className="selected-stop-name" title={poi.name}>{poi.name}</span>
-                          <span className="selected-stop-meta">
-                            {formatDistance(poi.distanceKm)} • {formatDetour(poi.distanceOffRoute)}
-                            {poi.isPlannedStop && ` • ${poi.stopMinutes}min`}
-                          </span>
+                          <div className="selected-stop-details">
+                            <span className="selected-stop-name" title={poi.name}>{poi.name}</span>
+                            <span className="selected-stop-meta">
+                              {formatTime(poi.eta)} • {formatDistance(poi.distanceKm)} • {formatDetour(poi.distanceOffRoute)}
+                            </span>
+                            {poi.hoursInfo?.display && (
+                              <span className="selected-stop-hours">
+                                <span className={poi.hoursInfo.isOpen === true ? 'open' : poi.hoursInfo.isOpen === false ? 'closed' : ''}>
+                                  {poi.hoursInfo.isOpen === true ? '✓ Open' : poi.hoursInfo.isOpen === false ? '✗ Closed' : '⏰'}
+                                </span>
+                                {' · Hours: '}{poi.hoursInfo.display}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                          {poi.isPossibleStop && (
+                          {poi.isPlannedStop ? (
+                            <div className="stop-time-editor">
+                              <button
+                                className="time-adjust-btn"
+                                onClick={() => setPlannedStops(prev => ({
+                                  ...prev,
+                                  [poi.id]: Math.max(5, (prev[poi.id] || 15) - 5)
+                                }))}
+                              >−</button>
+                              <span className="stop-time-value">{poi.stopMinutes}m</span>
+                              <button
+                                className="time-adjust-btn"
+                                onClick={() => setPlannedStops(prev => ({
+                                  ...prev,
+                                  [poi.id]: Math.min(480, (prev[poi.id] || 15) + 5)
+                                }))}
+                              >+</button>
+                            </div>
+                          ) : (
                             <button
                               className="btn btn-xs"
                               style={{ padding: '2px 6px', fontSize: '10px' }}
@@ -2685,151 +3713,183 @@ END:VCALENDAR`;
                   </div>
                 )}
 
-                {activeView === 'timeline' && filteredPOIs.length > 0 && viewMode === 'full' && (
-                  <div className="timeline">
-                    <div className="timeline-item">
-                      <div className="timeline-marker start">▶</div>
-                      <div className="timeline-content">
-                        <div className="timeline-time">{formatTime(getStartDateTime())}</div>
-                        <div className="timeline-title">Start</div>
-                        <div className="timeline-meta"><span>{useMiles ? 'Mile' : 'Km'} 0</span></div>
+                {activeView === 'timeline' && filteredPOIs.length > 0 && viewMode === 'full' && (() => {
+                  // Build timeline with interleaved mile markers
+                  const intervalKm = useMiles ? miToKm(10) : 10;
+                  const totalDistKm = routeData.distance;
+
+                  // Create mile markers every 10 miles/km
+                  const mileMarkers = [];
+                  for (let distKm = intervalKm; distKm < totalDistKm; distKm += intervalKm) {
+                    const markerValue = useMiles ? Math.round(kmToMi(distKm)) : Math.round(distKm);
+                    mileMarkers.push({ distanceKm: distKm, label: `${markerValue} ${useMiles ? 'mi' : 'km'}` });
+                  }
+
+                  // Combine POIs and mile markers, sorted by distance
+                  const allItems = [
+                    ...filteredPOIs.map(p => ({ type: 'poi', data: p, distanceKm: p.distanceKm })),
+                    ...mileMarkers.map(m => ({ type: 'marker', data: m, distanceKm: m.distanceKm }))
+                  ].sort((a, b) => a.distanceKm - b.distanceKm);
+
+                  return (
+                    <div className="timeline">
+                      <div className="timeline-item">
+                        <div className="timeline-marker start">▶</div>
+                        <div className="timeline-content">
+                          <div className="timeline-time">{formatTime(getStartDateTime())}</div>
+                          <div className="timeline-title">Start</div>
+                          <div className="timeline-meta"><span>{useMiles ? 'Mile' : 'Km'} 0</span></div>
+                        </div>
                       </div>
-                    </div>
 
-                    {filteredPOIs.map(poi => {
-                      const cat = POI_CATEGORIES[poi.category];
-                      const detourClass = poi.distanceOffRoute > 200 ? 'far' : '';
-                      const distLabel = useMiles
-                        ? `Mile ${kmToMi(poi.distanceKm).toFixed(1)}`
-                        : `Km ${poi.distanceKm.toFixed(1)}`;
-                      const osmUrl = `https://www.openstreetmap.org/${poi.osmType}/${poi.osmId}`;
-                      const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${poi.coordinates[0]},${poi.coordinates[1]}`;
+                      {allItems.map((item, idx) => {
+                        if (item.type === 'marker') {
+                          return (
+                            <div key={`marker-${idx}`} className="timeline-mile-marker">
+                              <div className="timeline-mile-marker-dot"></div>
+                              <span className="timeline-mile-marker-label">{item.data.label}</span>
+                            </div>
+                          );
+                        }
 
-                      return (
-                        <div key={poi.id} className={`timeline-item ${poi.isPlannedStop ? 'planned-stop' : ''}`}>
-                          <div className={`timeline-marker ${poi.category}`}>
-                            <cat.icon />
-                          </div>
-                          <div className="timeline-content">
-                            <div className="timeline-time">
-                              {formatTime(poi.eta)}
-                              {poi.isPlannedStop && <span className="planned-stop-badge" style={{ marginLeft: '8px' }}>⏱ {poi.stopMinutes} min stop</span>}
-                              {poi.isPossibleStop && <span className="possible-stop-badge" style={{ marginLeft: '8px' }}>📌 Possible</span>}
+                        const poi = item.data;
+                        const cat = POI_CATEGORIES[poi.category];
+                        const detourClass = poi.distanceOffRoute > 200 ? 'far' : '';
+                        const distLabel = useMiles
+                          ? `Mile ${kmToMi(poi.distanceKm).toFixed(1)}`
+                          : `Km ${poi.distanceKm.toFixed(1)}`;
+                        const osmUrl = `https://www.openstreetmap.org/${poi.osmType}/${poi.osmId}`;
+                        const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${poi.coordinates[0]},${poi.coordinates[1]}`;
+
+                        return (
+                          <div key={poi.id} className={`timeline-item ${poi.isPlannedStop ? 'planned-stop' : ''}`}>
+                            <div className={`timeline-marker ${poi.category}`}>
+                              <cat.icon />
                             </div>
-                            <div className="timeline-title">{poi.name}</div>
-                            <div className="timeline-meta">
-                              <span>{poi.type}</span>
-                              <span>{distLabel}</span>
-                              {poi.distanceOffRoute >= 50 && (
-                                <span className={`detour-badge ${detourClass}`}>
-                                  ↗ {formatDetour(poi.distanceOffRoute)}
-                                </span>
-                              )}
-                              {poi.location && (
-                                <span className="location-text">📍 {poi.location}</span>
-                              )}
-                            </div>
-                            {poi.hoursInfo?.display && (
-                              <div style={{ marginTop: '4px' }}>
-                                <span className={`hours-badge ${poi.hoursInfo.isOpen === true ? 'open' : poi.hoursInfo.isOpen === false ? 'closed' : 'unknown'}`}>
-                                  {poi.hoursInfo.isOpen === true ? '✓ Open' : poi.hoursInfo.isOpen === false ? '✗ Closed' : '⏰'} {poi.hoursInfo.display}
-                                </span>
+                            <div className="timeline-content">
+                              <div className="timeline-time">
+                                {formatTime(poi.eta)}
+                                {poi.isPlannedStop && <span className="planned-stop-badge" style={{ marginLeft: '8px' }}>⏱ {poi.stopMinutes} min stop</span>}
+                                {poi.isPossibleStop && <span className="possible-stop-badge" style={{ marginLeft: '8px' }}>📌 Possible</span>}
                               </div>
-                            )}
-                            <div className="timeline-actions">
-                              <div className="stop-buttons">
-                                {!poi.isPlannedStop && !poi.isPossibleStop && (
-                                  <>
-                                    <button
-                                      className="stop-btn"
-                                      onClick={() => togglePlannedStop(poi.id)}
-                                      disabled={plannedStopsCount >= MAX_PLANNED_STOPS}
-                                    >
-                                      + Planned
-                                    </button>
-                                    <button
-                                      className="stop-btn"
-                                      onClick={() => togglePossibleStop(poi.id)}
-                                    >
-                                      + Possible
-                                    </button>
-                                  </>
+                              <div className="timeline-title">{poi.name}</div>
+                              <div className="timeline-meta">
+                                <span>{poi.type}</span>
+                                <span>{distLabel}</span>
+                                {poi.distanceOffRoute >= 50 ? (
+                                  <span className={`detour-badge ${detourClass}`}>
+                                    ↗ {formatDetour(poi.distanceOffRoute)}
+                                  </span>
+                                ) : (
+                                  <span className="on-route-badge">On Route</span>
                                 )}
-                                {poi.isPossibleStop && (
-                                  <>
-                                    <button
-                                      className="stop-btn possible"
-                                      onClick={() => togglePossibleStop(poi.id)}
-                                    >
-                                      ✓ Possible
-                                    </button>
-                                    <button
-                                      className="stop-btn"
-                                      onClick={() => convertToPlanedStop(poi.id)}
-                                    >
-                                      → Planned
-                                    </button>
-                                  </>
+                                {poi.location && (
+                                  <span className="location-text">📍 {poi.location}</span>
                                 )}
                               </div>
-                              {poi.isPlannedStop && (
-                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                  <div className="stop-time-input">
-                                    <input
-                                      type="number"
-                                      min="5"
-                                      max="480"
-                                      step="5"
-                                      value={poi.stopMinutes}
-                                      onChange={(e) => updateStopTime(poi.id, e.target.value)}
-                                    />
-                                    <span>min</span>
-                                  </div>
-                                  <button
-                                    className="stop-btn planned"
-                                    onClick={() => togglePlannedStop(poi.id)}
-                                  >
-                                    ✓ Planned
-                                  </button>
+                              {poi.hoursInfo?.display && (
+                                <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span className={`hours-badge ${poi.hoursInfo.isOpen === true ? 'open' : poi.hoursInfo.isOpen === false ? 'closed' : 'unknown'}`}>
+                                    {poi.hoursInfo.isOpen === true ? '✓ Open' : poi.hoursInfo.isOpen === false ? '✗ Closed' : '⏰ Unknown'}
+                                  </span>
+                                  <span className="hours-display">Hours: {poi.hoursInfo.display}</span>
                                 </div>
                               )}
-                              <a
-                                href={osmUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="resource-link"
-                              >
-                                OSM <Icons.ExternalLink />
-                              </a>
-                              <a
-                                href={gmapsUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="resource-link gmaps"
-                              >
-                                GMaps <Icons.ExternalLink />
-                              </a>
+                              <div className="timeline-actions">
+                                <div className="stop-buttons">
+                                  {!poi.isPlannedStop && !poi.isPossibleStop && (
+                                    <>
+                                      <button
+                                        className="stop-btn"
+                                        onClick={() => togglePlannedStop(poi.id)}
+                                        disabled={plannedStopsCount >= MAX_PLANNED_STOPS}
+                                      >
+                                        + Planned
+                                      </button>
+                                      <button
+                                        className="stop-btn"
+                                        onClick={() => togglePossibleStop(poi.id)}
+                                      >
+                                        + Possible
+                                      </button>
+                                    </>
+                                  )}
+                                  {poi.isPossibleStop && (
+                                    <>
+                                      <button
+                                        className="stop-btn possible"
+                                        onClick={() => togglePossibleStop(poi.id)}
+                                      >
+                                        ✓ Possible
+                                      </button>
+                                      <button
+                                        className="stop-btn"
+                                        onClick={() => convertToPlanedStop(poi.id)}
+                                      >
+                                        → Planned
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                                {poi.isPlannedStop && (
+                                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                    <div className="stop-time-input">
+                                      <input
+                                        type="number"
+                                        min="5"
+                                        max="480"
+                                        step="5"
+                                        value={poi.stopMinutes}
+                                        onChange={(e) => updateStopTime(poi.id, e.target.value)}
+                                      />
+                                      <span>min</span>
+                                    </div>
+                                    <button
+                                      className="stop-btn planned"
+                                      onClick={() => togglePlannedStop(poi.id)}
+                                    >
+                                      ✓ Planned
+                                    </button>
+                                  </div>
+                                )}
+                                <a
+                                  href={osmUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="resource-link"
+                                >
+                                  OSM <Icons.ExternalLink />
+                                </a>
+                                <a
+                                  href={gmapsUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="resource-link gmaps"
+                                >
+                                  GMaps <Icons.ExternalLink />
+                                </a>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
 
-                    <div className="timeline-item">
-                      <div className="timeline-marker end">◼</div>
-                      <div className="timeline-content">
-                        <div className="timeline-time">{formatTime(getEndDateTime())}</div>
-                        <div className="timeline-title">Finish</div>
-                        <div className="timeline-meta">
-                          <span>{useMiles ? 'Mile' : 'Km'} {getDisplayDistance(routeData.distance)}</span>
-                          {totalStopMinutes > 0 && (
-                            <span style={{ color: '#d97706' }}>+{totalStopMinutes} min stops</span>
-                          )}
+                      <div className="timeline-item">
+                        <div className="timeline-marker end">◼</div>
+                        <div className="timeline-content">
+                          <div className="timeline-time">{formatTime(getEndDateTime())}</div>
+                          <div className="timeline-title">Finish</div>
+                          <div className="timeline-meta">
+                            <span>{useMiles ? 'Mile' : 'Km'} {getDisplayDistance(routeData.distance)}</span>
+                            {totalStopMinutes > 0 && (
+                              <span style={{ color: '#d97706' }}>+{totalStopMinutes} min stops</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {activeView === 'timeline' && filteredPOIs.length > 0 && viewMode === 'condensed' && (() => {
                   // Group POIs by 10-mile/km intervals
@@ -2874,7 +3934,7 @@ END:VCALENDAR`;
                               return (
                                 <div
                                   key={poi.id}
-                                  className={`mini-stop ${poi.isPlannedStop ? 'planned' : ''} ${poi.isPossibleStop ? 'possible' : ''}`}
+                                  className={`mini-stop ${poi.isPlannedStop ? 'planned' : ''} ${poi.isPossibleStop ? 'possible' : ''} ${expandedStopId === poi.id ? 'expanded' : ''}`}
                                   onClick={() => setExpandedStopId(expandedStopId === poi.id ? null : poi.id)}
                                   title={`${poi.name} - ${formatTime(poi.eta)}${poi.hoursInfo?.display ? ' - Hours: ' + poi.hoursInfo.display : ''}`}
                                 >
@@ -2924,16 +3984,21 @@ END:VCALENDAR`;
                           <div className="resource-details">
                             <p>🕐 ETA: {formatTime(poi.eta)}</p>
                             {poi.hoursInfo?.display && (
-                              <p>
+                              <p style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <span className={`hours-badge ${poi.hoursInfo.isOpen === true ? 'open' : poi.hoursInfo.isOpen === false ? 'closed' : 'unknown'}`}>
-                                  {poi.hoursInfo.isOpen === true ? '✓ Open' : poi.hoursInfo.isOpen === false ? '✗ Closed' : '⏰'} {poi.hoursInfo.display}
+                                  {poi.hoursInfo.isOpen === true ? '✓ Open' : poi.hoursInfo.isOpen === false ? '✗ Closed' : '⏰ Unknown'}
                                 </span>
+                                <span className="hours-display">Hours: {poi.hoursInfo.display}</span>
                               </p>
                             )}
                             <p>📍 {distLabel}</p>
-                            {poi.distanceOffRoute >= 50 && (
-                              <p><span className={`detour-badge ${detourClass}`}>↗ {formatDetour(poi.distanceOffRoute)}</span></p>
-                            )}
+                            <p>
+                              {poi.distanceOffRoute >= 50 ? (
+                                <span className={`detour-badge ${detourClass}`}>↗ {formatDetour(poi.distanceOffRoute)}</span>
+                              ) : (
+                                <span className="on-route-badge">On Route</span>
+                              )}
+                            </p>
                             {poi.isPlannedStop && (
                               <p style={{ color: '#d97706', fontWeight: 600 }}>⏱ Planned stop: {poi.stopMinutes} min</p>
                             )}
@@ -3026,7 +4091,6 @@ END:VCALENDAR`;
                 {activeView === 'grid' && filteredPOIs.length > 0 && viewMode === 'condensed' && (
                   <div className="condensed-grid">
                     {filteredPOIs.map(poi => {
-                      const cat = POI_CATEGORIES[poi.category];
                       const iconHtml = poi.category === 'water' ? '💧' :
                                       poi.category === 'camp' ? '⛺' :
                                       poi.category === 'food' ? '🍴' :
@@ -3034,32 +4098,30 @@ END:VCALENDAR`;
                       const distLabel = useMiles
                         ? `${kmToMi(poi.distanceKm).toFixed(1)} mi`
                         : `${poi.distanceKm.toFixed(1)} km`;
-                      const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${poi.coordinates[0]},${poi.coordinates[1]}`;
 
                       return (
-                        <a
+                        <div
                           key={poi.id}
-                          href={gmapsUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ textDecoration: 'none', color: 'inherit' }}
+                          className={`mini-card ${poi.isPlannedStop ? 'planned' : ''} ${poi.isPossibleStop ? 'possible' : ''} ${expandedStopId === poi.id ? 'expanded' : ''}`}
+                          onClick={() => setExpandedStopId(expandedStopId === poi.id ? null : poi.id)}
                         >
-                          <div className={`mini-card ${poi.isPlannedStop ? 'planned' : ''} ${poi.isPossibleStop ? 'possible' : ''}`}>
-                            <div className="mini-card-header">
-                              <span>{iconHtml}</span>
-                              <span className="mini-card-name" title={poi.name}>{poi.name}</span>
-                            </div>
-                            <div className="mini-card-meta">
-                              {formatTime(poi.eta)} • {distLabel}
-                              {poi.distanceOffRoute >= 50 && ` • ↗${useMiles ? (mToFt(poi.distanceOffRoute) / 5280).toFixed(1) + 'mi' : (poi.distanceOffRoute / 1000).toFixed(1) + 'km'}`}
-                            </div>
-                            {poi.hoursInfo?.display && (
-                              <div className={`mini-card-hours ${poi.hoursInfo.isOpen === false ? 'closed' : ''}`}>
-                                {poi.hoursInfo.isOpen === true ? '✓' : poi.hoursInfo.isOpen === false ? '✗' : '⏰'} {poi.hoursInfo.display}
-                              </div>
-                            )}
+                          <div className="mini-card-header">
+                            <span>{iconHtml}</span>
+                            <span className="mini-card-name" title={poi.name}>{poi.name}</span>
                           </div>
-                        </a>
+                          <div className="mini-card-meta">
+                            {formatTime(poi.eta)} • {distLabel}
+                            {poi.distanceOffRoute >= 50 ? ` • ↗${useMiles ? (mToFt(poi.distanceOffRoute) / 5280).toFixed(1) + 'mi' : (poi.distanceOffRoute / 1000).toFixed(1) + 'km'}` : ' • On Route'}
+                          </div>
+                          {poi.hoursInfo?.display && (
+                            <div className="mini-card-hours">
+                              <span className={poi.hoursInfo.isOpen === false ? 'closed' : ''}>
+                                {poi.hoursInfo.isOpen === true ? '✓ Open' : poi.hoursInfo.isOpen === false ? '✗ Closed' : '⏰'}
+                              </span>
+                              {' · '}{poi.hoursInfo.display}
+                            </div>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
@@ -3067,6 +4129,8 @@ END:VCALENDAR`;
               </div>
             </section>
           )}
+
+          {renderPoiPopover()}
 
           {routeData && (
             <div className="export-panel">
@@ -3083,13 +4147,6 @@ END:VCALENDAR`;
                   <div>
                     <div style={{ fontWeight: '500' }}>PDF Trip Plan</div>
                     <div style={{ fontSize: '12px', color: '#6b7280' }}>Printable itinerary</div>
-                  </div>
-                </div>
-                <div className="export-option" onClick={exportCalendar}>
-                  <div className="export-option-icon">📅</div>
-                  <div>
-                    <div style={{ fontWeight: '500' }}>Calendar (.ics)</div>
-                    <div style={{ fontSize: '12px', color: '#6b7280' }}>Import to calendar</div>
                   </div>
                 </div>
               </div>
