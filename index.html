@@ -215,15 +215,27 @@
     .export-option:hover { background: var(--color-bg-alt); }
     .export-option-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--color-bg-alt); display: flex; align-items: center; justify-content: center; font-size: 16px; }
 
-    .loading-overlay { position: fixed; inset: 0; background: rgba(255,251,248,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
-    .spinner { width: 48px; height: 48px; border: 3px solid var(--color-border); border-top-color: var(--color-primary); border-radius: 50%; animation: spin 1s linear infinite; }
+    .loading-overlay { position: fixed; inset: 0; background: rgba(255,251,248,0.97); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+    .loading-card { background: white; border-radius: 16px; padding: 40px 48px; box-shadow: 0 4px 24px rgba(0,0,0,0.1); max-width: 480px; width: 90%; }
+    .loading-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .spinner { width: 40px; height: 40px; border: 3px solid var(--color-border); border-top-color: var(--color-primary); border-radius: 50%; animation: spin 1s linear infinite; flex-shrink: 0; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-text { margin-top: 16px; font-size: 15px; color: var(--color-text-muted); }
-    .loading-steps { margin-top: 24px; text-align: left; }
-    .loading-step { display: flex; align-items: center; gap: 12px; padding: 8px 0; color: var(--color-text-muted); font-size: 14px; }
+    .loading-title { font-size: 18px; font-weight: 600; color: var(--color-text); }
+    .loading-subtitle { font-size: 14px; color: var(--color-text-muted); margin-top: 2px; }
+    .progress-container { margin-bottom: 24px; }
+    .progress-bar-bg { height: 8px; background: var(--color-bg-alt); border-radius: 4px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--color-primary), var(--color-accent)); border-radius: 4px; transition: width 0.3s ease; }
+    .progress-text { display: flex; justify-content: space-between; margin-top: 8px; font-size: 13px; color: var(--color-text-muted); }
+    .loading-steps { border-top: 1px solid var(--color-border); padding-top: 16px; }
+    .loading-step { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; color: var(--color-text-muted); font-size: 14px; line-height: 1.4; }
     .loading-step.active { color: var(--color-text); }
     .loading-step.done { color: var(--color-accent); }
-    .loading-step-icon { width: 20px; text-align: center; }
+    .loading-step-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; }
+    .loading-step.active .loading-step-icon { animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .loading-step-content { flex: 1; }
+    .loading-step-label { font-weight: 500; }
+    .loading-step-detail { font-size: 12px; color: var(--color-text-muted); margin-top: 2px; font-family: ui-monospace, monospace; }
 
     .empty-state { text-align: center; padding: 80px 40px; }
     .empty-state h3 { font-size: 20px; font-weight: 600; margin-bottom: 8px; color: var(--color-text); }
@@ -1736,7 +1748,7 @@
         date: 'October 3, 2026',
         description: 'The shorter sibling of the Driftless Dagger. Same start/finish at Chestnut Mountain Resort, same challenging terrain, half the distance.',
         image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=400&fit=crop',
-        badge: 'Dagger Series',
+        badge: 'Baby Dagger',
         gpxUrl: '/routes/baby-dagger.gpx', // TODO: Add URL when hosted
         color: '#277521',
         hasGpx: true
@@ -1770,6 +1782,7 @@
       const [isLoading, setIsLoading] = useState(false);
       const [loadingStep, setLoadingStep] = useState('');
       const [loadingSteps, setLoadingSteps] = useState([]);
+      const [loadingProgress, setLoadingProgress] = useState(0); // 0-100
       const [error, setError] = useState(null);
       const [routeData, setRouteData] = useState(null);
       const [pois, setPois] = useState([]);
@@ -1966,6 +1979,7 @@
 
         setError(null);
         setIsLoading(true);
+        setLoadingProgress(0);
         setPlannedStops({});
         setPossibleStops({});
         setRouteData(null);
@@ -1973,63 +1987,83 @@
 
         const fileSize = (file.size / 1024 / 1024).toFixed(1);
         const isLargeFile = file.size > 500000; // > 500KB
+        const categoryLabels = searchCategories.map(c => POI_CATEGORIES[c]?.label).filter(Boolean).join(', ');
 
         setLoadingSteps([
-          { id: 'parse', label: `Parsing GPX file (${fileSize}MB)${isLargeFile ? ' - large file, please wait...' : ''}`, status: 'active' },
-          { id: 'pois', label: 'Finding resources along route', status: 'pending' },
-          { id: 'process', label: 'Processing results', status: 'pending' }
+          { id: 'parse', label: 'Parsing GPX file', detail: `${file.name} (${fileSize}MB)`, status: 'active' },
+          { id: 'pois', label: 'Querying OpenStreetMap', detail: `Searching: ${categoryLabels}`, status: 'pending' },
+          { id: 'process', label: 'Processing results', detail: 'Calculating distances and filtering', status: 'pending' }
         ]);
+        setLoadingStep('Reading GPX file...');
+        setLoadingProgress(5);
 
         try {
           // Use setTimeout to allow UI to update before heavy parsing
           await new Promise(resolve => setTimeout(resolve, 50));
 
           const text = await file.text();
+          setLoadingStep('Extracting track points...');
+          setLoadingProgress(15);
+
           const route = parseGPX(text);
 
           if (route.coordinates.length < 2) {
             throw new Error('GPX file contains no valid track points');
           }
 
-          const routeInfo = `${route.distance.toFixed(0)}km route with ${route.totalPoints || route.coordinates.length} track points`;
+          const routeInfo = `${route.distance.toFixed(0)}km • ${route.totalPoints || route.coordinates.length} points`;
           console.log(`Parsed: ${routeInfo}`);
+          setLoadingProgress(25);
 
           setRouteData(route);
 
           setLoadingSteps(prev => prev.map(s =>
-            s.id === 'parse' ? { ...s, status: 'done', label: `Parsed ${routeInfo}` } :
-            s.id === 'pois' ? { ...s, status: 'active', label: 'Finding resources along route (this may take a minute for long routes)...' } : s
+            s.id === 'parse' ? { ...s, status: 'done', label: 'GPX parsed successfully', detail: routeInfo } :
+            s.id === 'pois' ? { ...s, status: 'active' } : s
           ));
+          setLoadingStep('Connecting to OpenStreetMap...');
+          setLoadingProgress(30);
 
           // Allow UI to update before POI fetch
           await new Promise(resolve => setTimeout(resolve, 50));
 
           let rawPois = [];
           try {
-            rawPois = await fetchPOIs(route.coordinates, setLoadingStep, searchCategories);
+            rawPois = await fetchPOIs(route.coordinates, (msg) => {
+              setLoadingStep(msg);
+              // Estimate progress during POI fetch (30-80%)
+              if (msg.includes('Querying')) setLoadingProgress(40);
+              if (msg.includes('Processing')) setLoadingProgress(70);
+            }, searchCategories);
           } catch (poiErr) {
             console.error('POI fetch error:', poiErr);
-            // Continue without POIs rather than failing completely
             setError('Could not fetch POIs from OpenStreetMap. The route is loaded - you can try refreshing to fetch POIs again.');
           }
 
+          setLoadingProgress(85);
           setLoadingSteps(prev => prev.map(s =>
-            s.id === 'pois' ? { ...s, status: 'done', label: `Found ${rawPois.length} resources` } :
+            s.id === 'pois' ? { ...s, status: 'done', label: 'Resources found', detail: `${rawPois.length} locations within search area` } :
             s.id === 'process' ? { ...s, status: 'active' } : s
           ));
+          setLoadingStep('Calculating distances from route...');
 
           setPois(rawPois);
-          setActiveFilters([...searchCategories]); // Sync view filters with search categories
-          setLoadingSteps(prev => prev.map(s => ({ ...s, status: 'done' })));
+          setActiveFilters([...searchCategories]);
+          setLoadingProgress(95);
 
+          setLoadingStep('Saving to history...');
           const updatedHistory = saveToHistory(route, rawPois);
           setHistory(updatedHistory);
+
+          setLoadingSteps(prev => prev.map(s => ({ ...s, status: 'done' })));
+          setLoadingProgress(100);
 
         } catch (err) {
           console.error('File processing error:', err);
           setError(err.message || 'Failed to process route');
         } finally {
           setIsLoading(false);
+          setLoadingProgress(0);
         }
       };
 
@@ -2041,48 +2075,64 @@
 
         setError(null);
         setIsLoading(true);
+        setLoadingProgress(0);
         setPlannedStops({});
         setPossibleStops({});
 
+        const categoryLabels = searchCategories.map(c => POI_CATEGORIES[c]?.label).filter(Boolean).join(', ');
+
         setLoadingSteps([
-          { id: 'load', label: 'Loading saved route...', status: 'active' },
-          { id: 'pois', label: 'Re-analyzing with current settings...', status: 'pending' },
-          { id: 'process', label: 'Processing results', status: 'pending' }
+          { id: 'load', label: 'Loading saved route', detail: entry.name, status: 'active' },
+          { id: 'pois', label: 'Querying OpenStreetMap', detail: `Searching: ${categoryLabels}`, status: 'pending' },
+          { id: 'process', label: 'Processing results', detail: 'Calculating distances and filtering', status: 'pending' }
         ]);
+        setLoadingStep('Restoring route data...');
+        setLoadingProgress(10);
 
         try {
           setRouteData(entry.routeData);
+          setLoadingProgress(25);
 
           setLoadingSteps(prev => prev.map(s =>
-            s.id === 'load' ? { ...s, status: 'done' } :
+            s.id === 'load' ? { ...s, status: 'done', label: 'Route loaded', detail: `${entry.distance?.toFixed(0) || '?'}km • ${entry.routeData?.coordinates?.length || '?'} points` } :
             s.id === 'pois' ? { ...s, status: 'active' } : s
           ));
+          setLoadingStep('Connecting to OpenStreetMap...');
+          setLoadingProgress(30);
 
           // Re-fetch POIs with current maxDetourDistance setting
           let rawPois = [];
           try {
-            rawPois = await fetchPOIs(entry.routeData.coordinates, setLoadingStep, searchCategories);
+            rawPois = await fetchPOIs(entry.routeData.coordinates, (msg) => {
+              setLoadingStep(msg);
+              if (msg.includes('Querying')) setLoadingProgress(45);
+              if (msg.includes('Processing')) setLoadingProgress(75);
+            }, searchCategories);
           } catch (poiErr) {
             console.error('POI fetch error:', poiErr);
-            // Fall back to stored POIs
             rawPois = entry.poisData || [];
             setError('Could not refresh POIs. Using cached data.');
           }
 
+          setLoadingProgress(85);
           setLoadingSteps(prev => prev.map(s =>
-            s.id === 'pois' ? { ...s, status: 'done', label: `Found ${rawPois.length} resources` } :
+            s.id === 'pois' ? { ...s, status: 'done', label: 'Resources found', detail: `${rawPois.length} locations within search area` } :
             s.id === 'process' ? { ...s, status: 'active' } : s
           ));
+          setLoadingStep('Calculating distances from route...');
 
           setPois(rawPois);
-          setActiveFilters([...searchCategories]); // Sync view filters with search categories
+          setActiveFilters([...searchCategories]);
+          setLoadingProgress(95);
           setLoadingSteps(prev => prev.map(s => ({ ...s, status: 'done' })));
+          setLoadingProgress(100);
 
         } catch (err) {
           console.error('Load history error:', err);
           setError(err.message || 'Failed to load route');
         } finally {
           setIsLoading(false);
+          setLoadingProgress(0);
         }
       };
 
@@ -2937,75 +2987,95 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
 
         setError(null);
         setIsLoading(true);
+        setLoadingProgress(0);
         setPlannedStops({});
         setPossibleStops({});
         setRouteData(null);
         setPois([]);
 
+        const categoryLabels = searchCategories.map(c => POI_CATEGORIES[c]?.label).filter(Boolean).join(', ');
+
         setLoadingSteps([
-          { id: 'fetch', label: `Fetching ${route.name} route data...`, status: 'active' },
-          { id: 'parse', label: 'Parsing GPX file', status: 'pending' },
-          { id: 'pois', label: 'Finding resources along route', status: 'pending' },
-          { id: 'process', label: 'Processing results', status: 'pending' }
+          { id: 'fetch', label: 'Downloading route', detail: route.gpxUrl, status: 'active' },
+          { id: 'parse', label: 'Parsing GPX file', detail: `${route.distance} miles of track data`, status: 'pending' },
+          { id: 'pois', label: 'Querying OpenStreetMap', detail: `Searching: ${categoryLabels}`, status: 'pending' },
+          { id: 'process', label: 'Processing results', detail: 'Calculating distances and filtering', status: 'pending' }
         ]);
+        setLoadingStep(`Connecting to server...`);
+        setLoadingProgress(5);
 
         try {
           // Fetch GPX from URL
           const gpxText = await fetchGpxFromUrl(route.gpxUrl);
+          setLoadingProgress(20);
 
           setLoadingSteps(prev => prev.map(s =>
-            s.id === 'fetch' ? { ...s, status: 'done', label: `Downloaded ${route.name} route` } :
+            s.id === 'fetch' ? { ...s, status: 'done', label: 'Route downloaded', detail: `${(gpxText.length / 1024).toFixed(0)} KB received` } :
             s.id === 'parse' ? { ...s, status: 'active' } : s
           ));
+          setLoadingStep('Extracting track points...');
 
           // Allow UI to update
           await new Promise(resolve => setTimeout(resolve, 50));
 
           const parsedRoute = parseGPX(gpxText);
+          setLoadingProgress(30);
 
           if (parsedRoute.coordinates.length < 2) {
             throw new Error('GPX file contains no valid track points');
           }
 
-          const routeInfo = `${parsedRoute.distance.toFixed(0)}km route with ${parsedRoute.totalPoints || parsedRoute.coordinates.length} track points`;
+          const routeInfo = `${parsedRoute.distance.toFixed(0)}km • ${parsedRoute.totalPoints || parsedRoute.coordinates.length} points`;
           console.log(`Parsed: ${routeInfo}`);
 
           setRouteData(parsedRoute);
 
           setLoadingSteps(prev => prev.map(s =>
-            s.id === 'parse' ? { ...s, status: 'done', label: `Parsed ${routeInfo}` } :
-            s.id === 'pois' ? { ...s, status: 'active', label: 'Finding resources along route (this may take a minute for long routes)...' } : s
+            s.id === 'parse' ? { ...s, status: 'done', label: 'GPX parsed successfully', detail: routeInfo } :
+            s.id === 'pois' ? { ...s, status: 'active' } : s
           ));
+          setLoadingStep('Connecting to OpenStreetMap...');
+          setLoadingProgress(35);
 
           // Allow UI to update before POI fetch
           await new Promise(resolve => setTimeout(resolve, 50));
 
           let rawPois = [];
           try {
-            rawPois = await fetchPOIs(parsedRoute.coordinates, setLoadingStep, searchCategories);
+            rawPois = await fetchPOIs(parsedRoute.coordinates, (msg) => {
+              setLoadingStep(msg);
+              if (msg.includes('Querying')) setLoadingProgress(45);
+              if (msg.includes('Processing')) setLoadingProgress(75);
+            }, searchCategories);
           } catch (poiErr) {
             console.error('POI fetch error:', poiErr);
             setError('Could not fetch POIs from OpenStreetMap. The route is loaded - you can try refreshing to fetch POIs again.');
           }
 
+          setLoadingProgress(85);
           setLoadingSteps(prev => prev.map(s =>
-            s.id === 'pois' ? { ...s, status: 'done', label: `Found ${rawPois.length} resources` } :
+            s.id === 'pois' ? { ...s, status: 'done', label: 'Resources found', detail: `${rawPois.length} locations within search area` } :
             s.id === 'process' ? { ...s, status: 'active' } : s
           ));
+          setLoadingStep('Calculating distances from route...');
 
           setPois(rawPois);
           setActiveFilters([...searchCategories]);
-          setLoadingSteps(prev => prev.map(s => ({ ...s, status: 'done' })));
+          setLoadingProgress(95);
 
-          // Save to history with route name
+          setLoadingStep('Saving to history...');
           const updatedHistory = saveToHistory(parsedRoute, rawPois);
           setHistory(updatedHistory);
+
+          setLoadingSteps(prev => prev.map(s => ({ ...s, status: 'done' })));
+          setLoadingProgress(100);
 
         } catch (err) {
           console.error('Featured route loading error:', err);
           setError(err.message || `Failed to load ${route.name} route`);
         } finally {
           setIsLoading(false);
+          setLoadingProgress(0);
         }
       };
 
@@ -3173,17 +3243,40 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
 
           {isLoading && (
             <div className="loading-overlay">
-              <div className="spinner"></div>
-              <div className="loading-text">Analyzing your route...</div>
-              <div className="loading-steps">
-                {loadingSteps.map(step => (
-                  <div key={step.id} className={`loading-step ${step.status}`}>
-                    <span className="loading-step-icon">
-                      {step.status === 'done' ? '✓' : step.status === 'active' ? '○' : '·'}
-                    </span>
-                    {step.label}
+              <div className="loading-card">
+                <div className="loading-header">
+                  <div className="spinner"></div>
+                  <div>
+                    <div className="loading-title">
+                      {selectedFeaturedRoute ? `Scouting ${selectedFeaturedRoute.name}` : 'Analyzing Your Route'}
+                    </div>
+                    <div className="loading-subtitle">{loadingStep || 'Please wait...'}</div>
                   </div>
-                ))}
+                </div>
+
+                <div className="progress-container">
+                  <div className="progress-bar-bg">
+                    <div className="progress-bar-fill" style={{ width: `${loadingProgress}%` }}></div>
+                  </div>
+                  <div className="progress-text">
+                    <span>{loadingSteps.filter(s => s.status === 'done').length} of {loadingSteps.length} steps</span>
+                    <span>{loadingProgress}%</span>
+                  </div>
+                </div>
+
+                <div className="loading-steps">
+                  {loadingSteps.map(step => (
+                    <div key={step.id} className={`loading-step ${step.status}`}>
+                      <span className="loading-step-icon">
+                        {step.status === 'done' ? '✓' : step.status === 'active' ? '◉' : '○'}
+                      </span>
+                      <div className="loading-step-content">
+                        <div className="loading-step-label">{step.label}</div>
+                        {step.detail && <div className="loading-step-detail">{step.detail}</div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
