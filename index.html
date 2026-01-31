@@ -404,6 +404,14 @@
     .powered-by span { font-size: 12px; color: var(--color-text-muted); }
     .powered-by a { color: var(--color-primary); font-weight: 500; text-decoration: none; }
     .powered-by a:hover { text-decoration: underline; }
+
+    /* View Plan Floating Button */
+    .view-plan-fab { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; align-items: center; gap: 8px; background: var(--color-primary); color: white; padding: 14px 20px; border-radius: 50px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 12px rgba(0,65,124,0.3); cursor: pointer; border: none; transition: all 0.2s ease; opacity: 0; transform: translateY(20px); pointer-events: none; }
+    .view-plan-fab.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .view-plan-fab:hover { background: var(--color-primary-dark); box-shadow: 0 6px 16px rgba(0,65,124,0.4); transform: translateY(-2px); }
+    .view-plan-fab.visible:hover { transform: translateY(-2px); }
+    .view-plan-fab svg { width: 18px; height: 18px; }
+    .view-plan-fab .fab-count { background: #F59E0B; color: #78350F; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 700; margin-left: 4px; }
   </style>
 </head>
 <body>
@@ -1041,70 +1049,223 @@
       return `[out:json][timeout:90];(${tagQueries.join('')});out center;`;
     };
 
-    // Fetch POIs from Overpass API with timeout and retry
-    const fetchPOIs = async (coordinates, onProgress, categoriesToSearch = null, retryCount = 0) => {
-      // Filter categories to only those requested
-      const categories = categoriesToSearch
-        ? Object.fromEntries(Object.entries(POI_CATEGORIES).filter(([key]) => categoriesToSearch.includes(key)))
-        : POI_CATEGORIES;
-      const query = buildOverpassQuery(coordinates, categories);
-      onProgress?.('Querying OpenStreetMap...');
+    // Calculate route segments for batch processing long routes
+    const calculateRouteSegments = (coordinates) => {
+      const totalDist = coordinates[coordinates.length - 1]?.[3] || 0; // km
 
-      console.log('Overpass query length:', query.length, 'chars');
+      // Determine segment count based on route length
+      // ~80km per segment is a sweet spot for Overpass complexity
+      const segmentSizeKm = 80;
+      const minSegments = 1;
+      const maxSegments = 8;
 
-      // Create abort controller for timeout
+      let targetSegments = Math.ceil(totalDist / segmentSizeKm);
+      targetSegments = Math.min(Math.max(targetSegments, minSegments), maxSegments);
+
+      // For short routes (<100km), use single segment
+      if (totalDist < 100) {
+        return [{ coordinates, startDist: 0, endDist: totalDist }];
+      }
+
+      const segments = [];
+      const segmentDistKm = totalDist / targetSegments;
+
+      let segmentStart = 0;
+      let currentSegment = [];
+      let segmentIndex = 0;
+
+      for (let i = 0; i < coordinates.length; i++) {
+        const dist = coordinates[i][3] || 0;
+        const segmentEnd = (segmentIndex + 1) * segmentDistKm;
+
+        currentSegment.push(coordinates[i]);
+
+        // Check if we've crossed into next segment or reached end
+        if (dist >= segmentEnd || i === coordinates.length - 1) {
+          if (currentSegment.length > 0) {
+            segments.push({
+              coordinates: currentSegment,
+              startDist: segmentStart,
+              endDist: dist
+            });
+            segmentStart = dist;
+            segmentIndex++;
+            currentSegment = [coordinates[i]]; // Overlap last point for continuity
+          }
+        }
+      }
+
+      console.log(`Route segmented: ${totalDist.toFixed(0)}km into ${segments.length} segments`);
+      segments.forEach((seg, i) => {
+        console.log(`  Segment ${i + 1}: ${seg.startDist.toFixed(0)}-${seg.endDist.toFixed(0)}km (${seg.coordinates.length} points)`);
+      });
+
+      return segments;
+    };
+
+    // Fetch POIs for a single route segment
+    const fetchPOIsForSegment = async (segmentCoords, categories, segmentIndex, totalSegments, retryCount = 0) => {
+      const query = buildOverpassQuery(segmentCoords, categories);
+
+      // Use different endpoints to distribute load
+      const endpoints = [
+        'https://overpass-api.de/api/interpreter',
+        'https://overpass.kumi.systems/api/interpreter',
+        'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
+      ];
+      const endpoint = endpoints[(segmentIndex + retryCount) % endpoints.length];
+
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 1 minute per segment
 
-      let response;
       try {
-        // Use different Overpass endpoints to avoid caching issues
-        const endpoints = [
-          'https://overpass-api.de/api/interpreter',
-          'https://overpass.kumi.systems/api/interpreter',
-          'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
-        ];
-        const endpoint = endpoints[retryCount % endpoints.length];
+        console.log(`Segment ${segmentIndex}/${totalSegments}: Querying ${endpoint}...`);
 
-        console.log(`Fetching from ${endpoint}...`);
-
-        response = await fetch(endpoint, {
+        const response = await fetch(endpoint, {
           method: 'POST',
           body: query,
           headers: { 'Content-Type': 'text/plain' },
           signal: controller.signal
         });
-      } catch (fetchErr) {
+
         clearTimeout(timeoutId);
-        if (fetchErr.name === 'AbortError') {
-          throw new Error('OpenStreetMap query timed out. The route may be too long or the server is busy. Try again later.');
+
+        if (!response.ok) {
+          if ((response.status === 429 || response.status === 504) && retryCount < 2) {
+            console.log(`Segment ${segmentIndex}: Server returned ${response.status}, retrying...`);
+            await new Promise(r => setTimeout(r, 2000 * (retryCount + 1)));
+            return fetchPOIsForSegment(segmentCoords, categories, segmentIndex, totalSegments, retryCount + 1);
+          }
+          throw new Error(`Segment ${segmentIndex} failed: ${response.status}`);
         }
-        // Retry once on network error
-        if (retryCount < 2) {
-          console.log('Network error, retrying...', fetchErr.message);
-          await new Promise(r => setTimeout(r, 1000));
-          return fetchPOIs(coordinates, onProgress, categoriesToSearch, retryCount + 1);
+
+        const data = await response.json();
+        console.log(`Segment ${segmentIndex}: Got ${data.elements?.length || 0} raw elements`);
+        return data.elements || [];
+
+      } catch (err) {
+        clearTimeout(timeoutId);
+
+        if (err.name === 'AbortError') {
+          console.error(`Segment ${segmentIndex}: Timed out`);
+          if (retryCount < 1) {
+            return fetchPOIsForSegment(segmentCoords, categories, segmentIndex, totalSegments, retryCount + 1);
+          }
         }
-        throw fetchErr;
+
+        // Don't throw - return empty array so other segments can still succeed
+        console.error(`Segment ${segmentIndex} failed:`, err.message);
+        return [];
       }
+    };
 
-      clearTimeout(timeoutId);
+    // Fetch POIs from Overpass API with batch processing for long routes
+    const fetchPOIs = async (coordinates, onProgress, categoriesToSearch = null) => {
+      // Filter categories to only those requested
+      const categories = categoriesToSearch
+        ? Object.fromEntries(Object.entries(POI_CATEGORIES).filter(([key]) => categoriesToSearch.includes(key)))
+        : POI_CATEGORIES;
 
-      if (!response.ok) {
-        if (response.status === 429 || response.status === 504) {
-          // Rate limited or timeout - retry with different endpoint
-          if (retryCount < 2) {
-            console.log(`Server returned ${response.status}, retrying with different endpoint...`);
-            await new Promise(r => setTimeout(r, 2000));
-            return fetchPOIs(coordinates, onProgress, categoriesToSearch, retryCount + 1);
+      // Calculate segments for batch processing
+      const segments = calculateRouteSegments(coordinates);
+      const totalDist = coordinates[coordinates.length - 1]?.[3] || 0;
+
+      let allElements = [];
+
+      if (segments.length === 1) {
+        // Short route - single query (original behavior)
+        onProgress?.('Querying OpenStreetMap...');
+        const query = buildOverpassQuery(coordinates, categories);
+        console.log('Overpass query length:', query.length, 'chars');
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 120000);
+
+        try {
+          const endpoints = [
+            'https://overpass-api.de/api/interpreter',
+            'https://overpass.kumi.systems/api/interpreter',
+            'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
+          ];
+
+          let response;
+          let lastError;
+
+          for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+              const endpoint = endpoints[attempt % endpoints.length];
+              console.log(`Attempt ${attempt + 1}: Fetching from ${endpoint}...`);
+
+              response = await fetch(endpoint, {
+                method: 'POST',
+                body: query,
+                headers: { 'Content-Type': 'text/plain' },
+                signal: controller.signal
+              });
+
+              if (response.ok) break;
+
+              if (response.status === 429 || response.status === 504) {
+                console.log(`Server returned ${response.status}, trying next endpoint...`);
+                await new Promise(r => setTimeout(r, 2000));
+                continue;
+              }
+
+              throw new Error(`HTTP ${response.status}`);
+            } catch (err) {
+              lastError = err;
+              if (err.name === 'AbortError') throw err;
+              if (attempt < 2) {
+                await new Promise(r => setTimeout(r, 1000));
+              }
+            }
+          }
+
+          clearTimeout(timeoutId);
+
+          if (!response?.ok) {
+            throw lastError || new Error('All endpoints failed');
+          }
+
+          const data = await response.json();
+          allElements = data.elements || [];
+          console.log(`Overpass returned ${allElements.length} raw elements`);
+
+        } catch (err) {
+          clearTimeout(timeoutId);
+          if (err.name === 'AbortError') {
+            throw new Error('OpenStreetMap query timed out. Try again later.');
           }
           throw new Error('OpenStreetMap servers are busy. Please wait a minute and try again.');
         }
-        throw new Error(`Failed to fetch POIs from OpenStreetMap (${response.status})`);
+
+      } else {
+        // Long route - batch processing with parallel segment queries
+        onProgress?.(`Processing ${segments.length} route segments (${totalDist.toFixed(0)}km route)...`);
+        console.log(`Batch processing: ${segments.length} segments for ${totalDist.toFixed(0)}km route`);
+
+        // Query all segments in parallel
+        const segmentPromises = segments.map((segment, idx) => {
+          return fetchPOIsForSegment(segment.coordinates, categories, idx + 1, segments.length)
+            .then(elements => {
+              onProgress?.(`Segment ${idx + 1}/${segments.length} complete (${elements.length} found)`);
+              return elements;
+            });
+        });
+
+        const segmentResults = await Promise.all(segmentPromises);
+
+        // Merge all elements from all segments
+        allElements = segmentResults.flat();
+        console.log(`Batch query complete: ${allElements.length} total raw elements from ${segments.length} segments`);
+
+        // Count successful segments
+        const successfulSegments = segmentResults.filter(r => r.length > 0).length;
+        if (successfulSegments < segments.length) {
+          console.warn(`${segments.length - successfulSegments} segment(s) returned no results`);
+        }
       }
 
-      const data = await response.json();
-      console.log(`Overpass returned ${data.elements?.length || 0} raw elements`);
       onProgress?.('Processing POI data...');
 
       // Build spatial index for faster lookups
@@ -1112,7 +1273,7 @@
 
       const pois = [];
 
-      data.elements.forEach(el => {
+      allElements.forEach(el => {
         const lat = el.lat || el.center?.lat;
         const lon = el.lon || el.center?.lon;
         if (!lat || !lon) return;
@@ -1748,7 +1909,7 @@
         date: 'October 3, 2026',
         description: 'The shorter sibling of the Driftless Dagger. Same start/finish at Chestnut Mountain Resort, same challenging terrain, half the distance.',
         image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=400&fit=crop',
-        badge: 'Baby Dagger',
+        badge: 'Dagger Series',
         gpxUrl: '/routes/baby-dagger.gpx', // TODO: Add URL when hosted
         color: '#277521',
         hasGpx: true
@@ -1804,6 +1965,10 @@
       const mileMarkersRef = useRef([]);
       const highlightMarkerRef = useRef(null);
       const fileInputRef = useRef(null);
+      const plannedStopsSectionRef = useRef(null);
+      const mapSectionRef = useRef(null);
+
+      const [showViewPlanButton, setShowViewPlanButton] = useState(false);
 
       // Save unit preference
       useEffect(() => {
@@ -1815,6 +1980,33 @@
       useEffect(() => {
         setHistory(getHistory());
       }, []);
+
+      // Show/hide View Plan floating button based on scroll position
+      useEffect(() => {
+        if (!routeData) {
+          setShowViewPlanButton(false);
+          return;
+        }
+
+        const handleScroll = () => {
+          const mapSection = mapSectionRef.current;
+          if (!mapSection) return;
+
+          const rect = mapSection.getBoundingClientRect();
+          // Show button when map section is scrolled out of view (top is above viewport)
+          const shouldShow = rect.bottom < 100 && Object.keys(plannedStops).length > 0;
+          setShowViewPlanButton(shouldShow);
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        handleScroll(); // Check initial state
+
+        return () => window.removeEventListener('scroll', handleScroll);
+      }, [routeData, plannedStops]);
+
+      const scrollToPlannedStops = () => {
+        plannedStopsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
 
       const getStartDateTime = () => {
         const [year, month, day] = startDate.split('-').map(Number);
@@ -2028,12 +2220,31 @@
           await new Promise(resolve => setTimeout(resolve, 50));
 
           let rawPois = [];
+          let segmentCount = 1;
           try {
             rawPois = await fetchPOIs(route.coordinates, (msg) => {
               setLoadingStep(msg);
-              // Estimate progress during POI fetch (30-80%)
-              if (msg.includes('Querying')) setLoadingProgress(40);
-              if (msg.includes('Processing')) setLoadingProgress(70);
+              // Handle segment progress messages
+              if (msg.includes('Processing') && msg.includes('segments')) {
+                const match = msg.match(/(\d+) route segments/);
+                if (match) segmentCount = parseInt(match[1]);
+                setLoadingProgress(35);
+                setLoadingSteps(prev => prev.map(s =>
+                  s.id === 'pois' ? { ...s, detail: `Batch query: ${segmentCount} segments` } : s
+                ));
+              } else if (msg.includes('Segment') && msg.includes('complete')) {
+                const match = msg.match(/Segment (\d+)\/(\d+)/);
+                if (match) {
+                  const current = parseInt(match[1]);
+                  const total = parseInt(match[2]);
+                  const progress = 35 + (current / total) * 40; // 35-75%
+                  setLoadingProgress(Math.round(progress));
+                }
+              } else if (msg.includes('Querying')) {
+                setLoadingProgress(40);
+              } else if (msg.includes('Processing POI')) {
+                setLoadingProgress(75);
+              }
             }, searchCategories);
           } catch (poiErr) {
             console.error('POI fetch error:', poiErr);
@@ -2041,8 +2252,17 @@
           }
 
           setLoadingProgress(85);
+
+          // Handle 0 POIs case with helpful message
+          if (rawPois.length === 0) {
+            setError(
+              'No resources found along this route. This may happen if: (1) The route passes through areas with limited OpenStreetMap data, ' +
+              '(2) The OpenStreetMap servers were busy, or (3) The route is unusually remote. Try clicking "Re-scan Route" to try again.'
+            );
+          }
+
           setLoadingSteps(prev => prev.map(s =>
-            s.id === 'pois' ? { ...s, status: 'done', label: 'Resources found', detail: `${rawPois.length} locations within search area` } :
+            s.id === 'pois' ? { ...s, status: 'done', label: 'Resources found', detail: `${rawPois.length} locations${segmentCount > 1 ? ` (${segmentCount} segments)` : ''}` } :
             s.id === 'process' ? { ...s, status: 'active' } : s
           ));
           setLoadingStep('Calculating distances from route...');
@@ -3041,11 +3261,31 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
           await new Promise(resolve => setTimeout(resolve, 50));
 
           let rawPois = [];
+          let segmentCount = 1;
           try {
             rawPois = await fetchPOIs(parsedRoute.coordinates, (msg) => {
               setLoadingStep(msg);
-              if (msg.includes('Querying')) setLoadingProgress(45);
-              if (msg.includes('Processing')) setLoadingProgress(75);
+              // Handle segment progress for batch queries
+              if (msg.includes('Processing') && msg.includes('segments')) {
+                const match = msg.match(/(\d+) route segments/);
+                if (match) segmentCount = parseInt(match[1]);
+                setLoadingProgress(40);
+                setLoadingSteps(prev => prev.map(s =>
+                  s.id === 'pois' ? { ...s, detail: `Batch query: ${segmentCount} segments` } : s
+                ));
+              } else if (msg.includes('Segment') && msg.includes('complete')) {
+                const match = msg.match(/Segment (\d+)\/(\d+)/);
+                if (match) {
+                  const current = parseInt(match[1]);
+                  const total = parseInt(match[2]);
+                  const progress = 40 + (current / total) * 35; // 40-75%
+                  setLoadingProgress(Math.round(progress));
+                }
+              } else if (msg.includes('Querying')) {
+                setLoadingProgress(45);
+              } else if (msg.includes('Processing POI')) {
+                setLoadingProgress(75);
+              }
             }, searchCategories);
           } catch (poiErr) {
             console.error('POI fetch error:', poiErr);
@@ -3053,8 +3293,16 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
           }
 
           setLoadingProgress(85);
+
+          // Handle 0 POIs case
+          if (rawPois.length === 0) {
+            setError(
+              `No resources found along ${route.name}. This may happen if OpenStreetMap servers were busy. Try clicking "Re-scan Route" to try again.`
+            );
+          }
+
           setLoadingSteps(prev => prev.map(s =>
-            s.id === 'pois' ? { ...s, status: 'done', label: 'Resources found', detail: `${rawPois.length} locations within search area` } :
+            s.id === 'pois' ? { ...s, status: 'done', label: 'Resources found', detail: `${rawPois.length} locations${segmentCount > 1 ? ` (${segmentCount} segments)` : ''}` } :
             s.id === 'process' ? { ...s, status: 'active' } : s
           ));
           setLoadingStep('Calculating distances from route...');
@@ -3574,7 +3822,7 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
                 </div>
 
                 {totalSelectedCount > 0 && (
-                  <div className="planned-stops-summary">
+                  <div ref={plannedStopsSectionRef} className="planned-stops-summary">
                     <div className="planned-stops-summary-text">
                       {plannedStopsCount > 0 && (
                         <><strong>{plannedStopsCount}</strong> planned stop{plannedStopsCount !== 1 ? 's' : ''} ({totalStopMinutes} min)</>
@@ -3659,7 +3907,7 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
                   </div>
                 )}
 
-                <div className="card" style={{ borderRadius: '12px 12px 0 0' }}>
+                <div ref={mapSectionRef} className="card" style={{ borderRadius: '12px 12px 0 0' }}>
                   <div className="map-container" style={{ borderRadius: '12px 12px 0 0' }}>
                     <div id="map" ref={mapRef}></div>
                     <div className="map-legend">
@@ -4252,6 +4500,23 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
               </button>
             </div>
           )}
+
+          {/* View Plan Floating Action Button */}
+          <button
+            className={`view-plan-fab ${showViewPlanButton ? 'visible' : ''}`}
+            onClick={scrollToPlannedStops}
+            title="View your planned stops"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+              <rect x="9" y="3" width="6" height="4" rx="1"/>
+              <path d="M9 12h6M9 16h6"/>
+            </svg>
+            View Plan
+            {Object.keys(plannedStops).length > 0 && (
+              <span className="fab-count">{Object.keys(plannedStops).length}</span>
+            )}
+          </button>
         </div>
       );
     }
