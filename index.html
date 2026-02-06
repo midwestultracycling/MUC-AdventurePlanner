@@ -142,6 +142,8 @@
 
     .selected-stops-summary { background: var(--color-white); border: 1px solid var(--color-border); border-radius: 12px; padding: 16px; margin-top: 12px; }
     .selected-stops-summary h4 { font-size: 13px; font-weight: 600; color: var(--color-text); margin-bottom: 12px; }
+    .selected-stops-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .selected-stops-header h4 { margin-bottom: 0; }
     .selected-stop-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--color-bg-alt); border-radius: 8px; margin-bottom: 8px; font-size: 13px; }
     .selected-stop-item:last-child { margin-bottom: 0; }
     .selected-stop-item.planned { background: #FFFBEB; border: 1px solid #F59E0B; }
@@ -159,6 +161,9 @@
     .time-adjust-btn { width: 22px; height: 22px; border: none; background: var(--color-white); border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px; color: var(--color-text); display: flex; align-items: center; justify-content: center; }
     .time-adjust-btn:hover { background: var(--color-border); }
     .stop-time-value { font-size: 12px; font-weight: 500; min-width: 32px; text-align: center; }
+    .get-hours-btn { padding: 4px 10px; font-size: 11px; border-radius: 6px; border: 1px solid var(--color-primary); background: var(--color-white); color: var(--color-primary); cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .get-hours-btn:hover { background: #E8F0F8; }
+    .get-hours-btn:disabled { opacity: 0.6; cursor: wait; }
 
     .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
     .resource-card { padding: 20px; position: relative; }
@@ -397,9 +402,46 @@
     .featured-card-gpx-badge.pending { background: #FEF3C7; color: #92400E; }
     .featured-card-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--color-primary); color: white; padding: 10px 20px; border-radius: 8px; font-weight: 500; font-size: 14px; text-decoration: none; transition: background 0.2s; }
     .featured-card-btn:hover { background: var(--color-primary-dark); }
-    .upload-section { background: var(--color-bg-alt); border-radius: 16px; padding: 40px; text-align: center; }
-    .upload-section h3 { font-size: 20px; font-weight: 600; color: var(--color-text); margin-bottom: 8px; }
-    .upload-section p { font-size: 14px; color: var(--color-text-muted); margin-bottom: 24px; }
+    /* Unified Upload Card */
+    .upload-card { padding: 32px; margin-bottom: 48px; border: 2px solid var(--color-primary); background: linear-gradient(135deg, #f8faff 0%, #fff 100%); }
+    .upload-card-header { text-align: center; margin-bottom: 24px; }
+    .upload-card-header h2 { font-size: 24px; font-weight: 700; color: var(--color-primary); margin-bottom: 8px; }
+    .upload-card-header p { font-size: 15px; color: var(--color-text-muted); }
+    .upload-card-content { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+    .upload-card-left { display: flex; flex-direction: column; gap: 20px; }
+    .upload-card-right { background: var(--color-bg-alt); padding: 20px; border-radius: 12px; max-width: 400px; }
+    .upload-card-right h4 { font-size: 14px; font-weight: 600; color: var(--color-text); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .settings-compact .form-group { margin-bottom: 16px; }
+    .settings-compact .form-group:last-child { margin-bottom: 0; }
+    .settings-compact label { font-size: 13px; margin-bottom: 6px; }
+    .settings-compact input, .settings-compact select { padding: 8px 12px; font-size: 14px; max-width: 100%; }
+    .settings-compact input[type="date"] { max-width: 160px; }
+    .settings-compact input[type="time"] { max-width: 110px; }
+    .settings-compact select { max-width: 200px; }
+    .filter-pills.compact { gap: 6px; }
+    .filter-pills.compact .pill { padding: 6px 10px; font-size: 12px; }
+    .recent-routes { background: var(--color-bg-alt); padding: 16px; border-radius: 12px; }
+    .recent-routes h4 { font-size: 13px; font-weight: 600; color: var(--color-text-muted); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .recent-routes-list { display: flex; flex-direction: column; gap: 8px; }
+    .recent-route-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: white; border-radius: 8px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--color-border); }
+    .recent-route-item:hover { border-color: var(--color-primary); background: #f8faff; }
+    .recent-route-name { font-size: 14px; font-weight: 500; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+    .recent-route-meta { font-size: 12px; color: var(--color-text-muted); }
+    .file-staged { border: 2px solid var(--color-primary); border-radius: 12px; padding: 20px; background: #E8F0F8; display: flex; flex-direction: column; gap: 16px; }
+    .file-staged-info { display: flex; align-items: center; gap: 12px; background: white; padding: 12px 16px; border-radius: 8px; }
+    .file-staged-icon { font-size: 24px; }
+    .file-staged-details { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .file-staged-name { font-weight: 600; color: var(--color-text); font-size: 14px; word-break: break-all; }
+    .file-staged-size { font-size: 12px; color: var(--color-text-muted); }
+    .file-staged-remove { background: none; border: none; font-size: 16px; color: var(--color-text-muted); cursor: pointer; padding: 4px 8px; border-radius: 4px; }
+    .file-staged-remove:hover { background: #FDE8E8; color: var(--color-secondary); }
+    .scout-btn { width: 100%; justify-content: center; padding: 14px 24px; font-size: 16px; }
+    .scout-warning { font-size: 12px; color: var(--color-secondary); text-align: center; margin: 0; }
+    .featured-routes-subtitle { font-size: 15px; color: var(--color-text-muted); margin-top: -8px; margin-bottom: 24px; }
+    @media (max-width: 768px) {
+      .upload-card-content { grid-template-columns: 1fr; }
+      .upload-card-right { order: -1; }
+    }
     .powered-by { margin-top: 48px; text-align: center; padding-top: 24px; border-top: 1px solid var(--color-border); }
     .powered-by span { font-size: 12px; color: var(--color-text-muted); }
     .powered-by a { color: var(--color-primary); font-weight: 500; text-decoration: none; }
@@ -1057,7 +1099,7 @@
       // ~80km per segment is a sweet spot for Overpass complexity
       const segmentSizeKm = 80;
       const minSegments = 1;
-      const maxSegments = 8;
+      const maxSegments = 60; // Supports routes up to ~4,800km / 3,000 miles
 
       let targetSegments = Math.ceil(totalDist / segmentSizeKm);
       targetSegments = Math.min(Math.max(targetSegments, minSegments), maxSegments);
@@ -1866,10 +1908,10 @@
         location: 'Chicago, IL, USA',
         date: 'July 11th, 2026',
         description: 'A 1,121-mile circumnavigation of Lake Michigan. This epic route follows the Great Lakes shoreline through forests, dunes, and charming small towns.',
-        image: 'https://static.wixstatic.com/media/a62e26_734778e856304097aa5738854ad54a3c~mv2.jpeg',
-        badge: 'Mishigami Series',
+        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=400&fit=crop',
+        badge: 'Featured Race',
         gpxUrl: '/routes/mishigami-main-event.gpx',
-        color: '#277521',
+        color: '#00417C',
         hasGpx: true
       },
      {
@@ -1880,10 +1922,10 @@
        location: 'Chicago, IL, USA',
        date: 'July 11th, 2026',
        description: 'The shorter sibling to Mishigami utilizing the ferry to cut across the lake.',
-       image: 'https://static.wixstatic.com/media/a62e26_ff54e3a1f7cc45bfb983a8af5635f867~mv2.jpeg',
-       badge: 'Mishigami Series',
+       image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=400&fit=crop',
+       badge: 'Featured Race',
        gpxUrl: '/routes/mini-gami.gpx',
-       color: '#277521',
+       color: '#00417C',
        hasGpx: true
      },
       {
@@ -1894,10 +1936,10 @@
         location: 'Galena, IL, USA',
         date: 'October 3, 2026',
         description: 'Rugged gravel roads, steep ascents, and peaceful backcountry stretches meet the raw beauty of the Driftless Region. Death by a Thousand Cuts.',
-        image: 'https://static.wixstatic.com/media/a62e26_c6bfdf5921fc44c6b1731160475308de~mv2.jpeg',
-        badge: 'Dagger Series',
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=400&fit=crop',
+        badge: 'Featured Race',
         gpxUrl: '/routes/driftless-dagger.gpx',
-        color: '#623CEA',
+        color: '#6B2424',
         hasGpx: true // GPX available but needs hosting
       },
       {
@@ -1908,10 +1950,10 @@
         location: 'Galena, IL',
         date: 'October 3, 2026',
         description: 'The shorter sibling of the Driftless Dagger. Same start/finish at Chestnut Mountain Resort, same challenging terrain, half the distance.',
-        image: 'https://static.wixstatic.com/media/a62e26_4bac403d3a514f748a1f82ea4e5cd661~mv2.jpeg',
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=400&fit=crop',
         badge: 'Dagger Series',
         gpxUrl: '/routes/baby-dagger.gpx', // TODO: Add URL when hosted
-        color: '#623CEA',
+        color: '#277521',
         hasGpx: true
       }
     ];
@@ -1949,7 +1991,7 @@
       const [pois, setPois] = useState([]);
       const [plannedStops, setPlannedStops] = useState({}); // { poiId: minutes }
       const [possibleStops, setPossibleStops] = useState({}); // { poiId: true } - marked as potential stop
-      const [maxDetourDistance, setMaxDetourDistance] = useState(1500); // meters - max distance off route to show
+      const [maxDetourDistance, setMaxDetourDistance] = useState(500); // meters - max distance off route to show (default ~0.3 mi)
       const [activeView, setActiveView] = useState('timeline');
       const [viewMode, setViewMode] = useState('full'); // 'full' or 'condensed'
       const [activeFilters, setActiveFilters] = useState(Object.keys(POI_CATEGORIES));
@@ -1958,6 +2000,7 @@
       const [dragOver, setDragOver] = useState(false);
       const [history, setHistory] = useState([]);
       const [expandedStopId, setExpandedStopId] = useState(null); // For condensed view popover
+      const [pendingFile, setPendingFile] = useState(null); // File ready to process
 
       const mapRef = useRef(null);
       const mapInstanceRef = useRef(null);
@@ -2141,6 +2184,75 @@
         });
       };
 
+      // State for tracking on-demand hours fetching
+      const [fetchingHours, setFetchingHours] = useState({}); // { poiId: true }
+
+      // Fetch hours for a single POI on demand
+      const fetchHoursForPoi = async (poiId) => {
+        const poi = pois.find(p => p.id === poiId);
+        if (!poi || poi.openingHours || !GOOGLE_PLACES_API_KEY) return;
+
+        setFetchingHours(prev => ({ ...prev, [poiId]: true }));
+
+        try {
+          const hours = await fetchGooglePlacesHours(poi);
+          if (hours) {
+            // Update the POI in the pois array
+            setPois(prev => prev.map(p =>
+              p.id === poiId ? { ...p, openingHours: hours, hoursSource: 'google' } : p
+            ));
+          }
+        } catch (err) {
+          console.error('Failed to fetch hours for POI:', err);
+        } finally {
+          setFetchingHours(prev => {
+            const { [poiId]: removed, ...rest } = prev;
+            return rest;
+          });
+        }
+      };
+
+      // Fetch hours for all selected stops that don't have hours
+      const fetchHoursForSelectedStops = async () => {
+        const selectedIds = [...Object.keys(plannedStops), ...Object.keys(possibleStops)];
+        const poisNeedingHours = pois.filter(p =>
+          selectedIds.includes(String(p.id)) &&
+          !p.openingHours &&
+          GOOGLE_HOURS_CATEGORIES.includes(p.category)
+        );
+
+        if (poisNeedingHours.length === 0) return;
+
+        // Mark all as fetching
+        const fetchingMap = {};
+        poisNeedingHours.forEach(p => { fetchingMap[p.id] = true; });
+        setFetchingHours(prev => ({ ...prev, ...fetchingMap }));
+
+        // Fetch in batches
+        const batchSize = 5;
+        for (let i = 0; i < poisNeedingHours.length; i += batchSize) {
+          const batch = poisNeedingHours.slice(i, i + batchSize);
+          await Promise.all(batch.map(async (poi) => {
+            try {
+              const hours = await fetchGooglePlacesHours(poi);
+              if (hours) {
+                setPois(prev => prev.map(p =>
+                  p.id === poi.id ? { ...p, openingHours: hours, hoursSource: 'google' } : p
+                ));
+              }
+            } finally {
+              setFetchingHours(prev => {
+                const { [poi.id]: removed, ...rest } = prev;
+                return rest;
+              });
+            }
+          }));
+          if (i + batchSize < poisNeedingHours.length) {
+            await new Promise(r => setTimeout(r, 200));
+          }
+        }
+      };
+
       const updateStopTime = (poiId, minutes) => {
         const mins = Math.max(0, Math.min(480, parseInt(minutes) || 0));
         setPlannedStops(prev => {
@@ -2161,8 +2273,21 @@
         setPlannedStops(prev => ({ ...prev, [poiId]: 15 }));
       };
 
-      const handleFile = async (file) => {
+      // Stage a file for processing (doesn't start analysis yet)
+      const stageFile = (file) => {
         if (!file) return;
+        if (!file.name.toLowerCase().endsWith('.gpx')) {
+          setError('Please select a GPX file');
+          return;
+        }
+        setError(null);
+        setPendingFile(file);
+      };
+
+      // Process the staged file (or a directly passed file)
+      const handleFile = async (file) => {
+        const fileToProcess = file || pendingFile;
+        if (!fileToProcess) return;
 
         if (searchCategories.length === 0) {
           setError('Please select at least one resource type to search.');
@@ -2170,6 +2295,8 @@
         }
 
         setError(null);
+        setPendingFile(null); // Clear pending file
+        setCurrentView('planner'); // Switch to planner view to show loading
         setIsLoading(true);
         setLoadingProgress(0);
         setPlannedStops({});
@@ -2177,12 +2304,12 @@
         setRouteData(null);
         setPois([]);
 
-        const fileSize = (file.size / 1024 / 1024).toFixed(1);
-        const isLargeFile = file.size > 500000; // > 500KB
+        const fileSize = (fileToProcess.size / 1024 / 1024).toFixed(1);
+        const isLargeFile = fileToProcess.size > 500000; // > 500KB
         const categoryLabels = searchCategories.map(c => POI_CATEGORIES[c]?.label).filter(Boolean).join(', ');
 
         setLoadingSteps([
-          { id: 'parse', label: 'Parsing GPX file', detail: `${file.name} (${fileSize}MB)`, status: 'active' },
+          { id: 'parse', label: 'Parsing GPX file', detail: `${fileToProcess.name} (${fileSize}MB)`, status: 'active' },
           { id: 'pois', label: 'Querying OpenStreetMap', detail: `Searching: ${categoryLabels}`, status: 'pending' },
           { id: 'process', label: 'Processing results', detail: 'Calculating distances and filtering', status: 'pending' }
         ]);
@@ -2193,7 +2320,7 @@
           // Use setTimeout to allow UI to update before heavy parsing
           await new Promise(resolve => setTimeout(resolve, 50));
 
-          const text = await file.text();
+          const text = await fileToProcess.text();
           setLoadingStep('Extracting track points...');
           setLoadingProgress(15);
 
@@ -2385,7 +2512,7 @@
         setDragOver(false);
         const file = e.dataTransfer.files[0];
         if (file && (file.name.endsWith('.gpx') || file.type === 'application/gpx+xml')) {
-          handleFile(file);
+          stageFile(file);
         } else {
           setError('Please upload a GPX file');
         }
@@ -3373,8 +3500,168 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
                   </p>
                 </div>
 
+                {/* Primary Upload Section */}
+                <div className="card upload-card">
+                  <div className="upload-card-header">
+                    <h2>Upload Your Route</h2>
+                    <p>Drop a GPX file to find resources along your route</p>
+                  </div>
+
+                  {error && (
+                    <div className="alert alert-warning" style={{ marginBottom: '20px' }}>
+                      <span className="alert-icon">⚠️</span>
+                      <div className="alert-content">
+                        <div className="alert-text">{error}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="upload-card-content">
+                    <div className="upload-card-left">
+                      {!pendingFile ? (
+                        <div
+                          className={`file-drop ${dragOver ? 'dragover' : ''}`}
+                          onDragOver={handleDragOver}
+                          onDragLeave={handleDragLeave}
+                          onDrop={handleDrop}
+                          onClick={() => fileInputRef.current?.click()}
+                          style={{ minHeight: '180px' }}
+                        >
+                          <div className="file-drop-icon">📁</div>
+                          <h3>Drop your GPX file here</h3>
+                          <p>or click to browse</p>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".gpx,application/gpx+xml"
+                            onChange={(e) => stageFile(e.target.files[0])}
+                          />
+                        </div>
+                      ) : (
+                        <div className="file-staged">
+                          <div className="file-staged-info">
+                            <span className="file-staged-icon">📄</span>
+                            <div className="file-staged-details">
+                              <span className="file-staged-name">{pendingFile.name}</span>
+                              <span className="file-staged-size">{(pendingFile.size / 1024).toFixed(1)} KB</span>
+                            </div>
+                            <button
+                              className="file-staged-remove"
+                              onClick={() => setPendingFile(null)}
+                              title="Remove file"
+                            >✕</button>
+                          </div>
+                          <button
+                            className="btn btn-primary scout-btn"
+                            onClick={() => handleFile()}
+                            disabled={searchCategories.length === 0}
+                          >
+                            🔍 Scout Route
+                          </button>
+                          {searchCategories.length === 0 && (
+                            <p className="scout-warning">Select at least one resource type →</p>
+                          )}
+                        </div>
+                      )}
+
+                      {history.length > 0 && (
+                        <div className="recent-routes">
+                          <h4><Icons.History /> Recent Routes</h4>
+                          <div className="recent-routes-list">
+                            {history.slice(0, 3).map(entry => (
+                              <div
+                                key={entry.id}
+                                className="recent-route-item"
+                                onClick={() => loadFromHistory(entry)}
+                              >
+                                <span className="recent-route-name">{entry.name}</span>
+                                <span className="recent-route-meta">{formatDistance(entry.distance)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="upload-card-right">
+                      <h4>Scout Settings</h4>
+                      <div className="settings-compact">
+                        <div className="form-group">
+                          <label>Start Date & Time</label>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <input
+                              type="date"
+                              value={startDate}
+                              onChange={(e) => setStartDate(e.target.value)}
+                              style={{ flex: 1 }}
+                            />
+                            <input
+                              type="time"
+                              value={startTime}
+                              onChange={(e) => setStartTime(e.target.value)}
+                              style={{ width: '100px' }}
+                            />
+                          </div>
+                        </div>
+                        <div className="form-group">
+                          <label>Average Speed</label>
+                          <div className="speed-input-group">
+                            <input
+                              type="number"
+                              min={useMiles ? 3 : 5}
+                              max={useMiles ? 25 : 40}
+                              step="0.5"
+                              value={useMiles ? kmToMi(avgSpeed).toFixed(1) : avgSpeed}
+                              onChange={(e) => {
+                                const val = parseFloat(e.target.value) || (useMiles ? 10 : 16);
+                                setAvgSpeed(useMiles ? miToKm(val) : val);
+                              }}
+                            />
+                            <span>{useMiles ? 'mph' : 'km/h'}</span>
+                          </div>
+                        </div>
+                        <div className="form-group">
+                          <label>Max Detour Distance</label>
+                          <select
+                            value={maxDetourDistance}
+                            onChange={(e) => setMaxDetourDistance(Number(e.target.value))}
+                          >
+                            <option value={500}>{useMiles ? '~0.3 mi' : '500 m'}</option>
+                            <option value={1000}>{useMiles ? '~0.6 mi' : '1 km'}</option>
+                            <option value={1500}>{useMiles ? '~1 mi' : '1.5 km'}</option>
+                            <option value={3000}>{useMiles ? '~2 mi' : '3 km'}</option>
+                            <option value={5000}>{useMiles ? '~3 mi' : '5 km'}</option>
+                          </select>
+                        </div>
+                        <div className="form-group">
+                          <label>Resources to Find</label>
+                          <div className="filter-pills compact">
+                            {Object.entries(POI_CATEGORIES).map(([key, cat]) => (
+                              <button
+                                key={key}
+                                className={`pill ${searchCategories.includes(key) ? 'active' : ''}`}
+                                onClick={() => {
+                                  setSearchCategories(prev =>
+                                    prev.includes(key)
+                                      ? prev.filter(k => k !== key)
+                                      : [...prev, key]
+                                  );
+                                }}
+                              >
+                                <cat.icon />
+                                {cat.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="featured-routes">
                   <h2>Featured Routes</h2>
+                  <p className="featured-routes-subtitle">Official routes from Midwest Ultra Cycling events</p>
                   <div className="featured-grid">
                     {FEATURED_ROUTES.map(route => (
                       <div
@@ -3427,18 +3714,6 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
                       </div>
                     ))}
                   </div>
-                </div>
-
-                <div className="upload-section">
-                  <h3>Have Your Own Route?</h3>
-                  <p>Upload a GPX file to discover resources along any cycling route.</p>
-                  <button
-                    className="btn btn-primary"
-                    onClick={() => setCurrentView('planner')}
-                  >
-                    <Icons.Upload />
-                    Upload GPX File
-                  </button>
                 </div>
 
                 <div className="powered-by">
@@ -3692,12 +3967,6 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
                     >
                       <Icons.Upload /> Upload GPX
                     </button>
-                    <button
-                      className={`input-tab ${inputMode === 'url' ? 'active' : ''}`}
-                      onClick={() => setInputMode('url')}
-                    >
-                      <Icons.Link /> Paste URL
-                    </button>
                     {history.length > 0 && (
                       <button
                         className={`input-tab ${inputMode === 'history' ? 'active' : ''}`}
@@ -3725,28 +3994,6 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
                         accept=".gpx,application/gpx+xml"
                         onChange={(e) => handleFile(e.target.files[0])}
                       />
-                    </div>
-                  )}
-
-                  {inputMode === 'url' && (
-                    <div>
-                      <div className="form-group">
-                        <label>Route URL</label>
-                        <div className="url-input-group">
-                          <input
-                            type="url"
-                            placeholder="https://ridewithgps.com/routes/... or strava.com/routes/..."
-                            value={routeUrl}
-                            onChange={(e) => setRouteUrl(e.target.value)}
-                          />
-                          <button className="btn btn-primary" onClick={handleUrlSubmit}>
-                            Load
-                          </button>
-                        </div>
-                      </div>
-                      <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '8px' }}>
-                        Tip: Export your route as a GPX file from RideWithGPS or Strava and upload it directly.
-                      </p>
                     </div>
                   )}
 
@@ -3843,7 +4090,20 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
 
                 {selectedStops.length > 0 && (
                   <div className="selected-stops-summary">
-                    <h4>Selected Stops ({selectedStops.length})</h4>
+                    <div className="selected-stops-header">
+                      <h4>Selected Stops ({selectedStops.length})</h4>
+                      {GOOGLE_PLACES_API_KEY && selectedStops.some(p => !p.openingHours && GOOGLE_HOURS_CATEGORIES.includes(p.category)) && (
+                        <button
+                          className="get-hours-btn"
+                          onClick={fetchHoursForSelectedStops}
+                          disabled={Object.keys(fetchingHours).length > 0}
+                        >
+                          {Object.keys(fetchingHours).length > 0
+                            ? `Fetching (${Object.keys(fetchingHours).length})...`
+                            : `🕐 Get Hours for All`}
+                        </button>
+                      )}
+                    </div>
                     {selectedStops.map(poi => (
                       <div key={poi.id} className={`selected-stop-item ${poi.isPlannedStop ? 'planned' : 'possible'}`}>
                         <div className="selected-stop-info">
@@ -3855,13 +4115,21 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
                             <span className="selected-stop-meta">
                               {formatTime(poi.eta)} • {formatDistance(poi.distanceKm)} • {formatDetour(poi.distanceOffRoute)}
                             </span>
-                            {poi.hoursInfo?.display && (
+                            {poi.hoursInfo?.display ? (
                               <span className="selected-stop-hours">
                                 <span className={poi.hoursInfo.isOpen === true ? 'open' : poi.hoursInfo.isOpen === false ? 'closed' : ''}>
                                   {poi.hoursInfo.isOpen === true ? '✓ Open' : poi.hoursInfo.isOpen === false ? '✗ Closed' : '⏰'}
                                 </span>
                                 {' · Hours: '}{poi.hoursInfo.display}
                               </span>
+                            ) : GOOGLE_HOURS_CATEGORIES.includes(poi.category) && GOOGLE_PLACES_API_KEY && (
+                              <button
+                                className="get-hours-btn"
+                                onClick={(e) => { e.stopPropagation(); fetchHoursForPoi(poi.id); }}
+                                disabled={fetchingHours[poi.id]}
+                              >
+                                {fetchingHours[poi.id] ? '...' : '🕐 Get Hours'}
+                              </button>
                             )}
                           </div>
                         </div>
