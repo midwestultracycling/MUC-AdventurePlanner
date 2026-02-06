@@ -437,6 +437,11 @@
     .file-staged-remove:hover { background: #FDE8E8; color: var(--color-secondary); }
     .scout-btn { width: 100%; justify-content: center; padding: 14px 24px; font-size: 16px; }
     .scout-warning { font-size: 12px; color: var(--color-secondary); text-align: center; margin: 0; }
+    .file-staged.featured { border-color: var(--color-accent); background: linear-gradient(135deg, #E8F5E8 0%, #F0FAF0 100%); }
+    .file-staged.featured .file-staged-info { border: 1px solid var(--color-accent); }
+    .file-staged.loading { border-color: var(--color-text-muted); background: var(--color-bg-alt); }
+    .file-staged.loading .file-staged-icon { animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     .featured-routes-subtitle { font-size: 15px; color: var(--color-text-muted); margin-top: -8px; margin-bottom: 24px; }
     @media (max-width: 768px) {
       .upload-card-content { grid-template-columns: 1fr; }
@@ -2001,6 +2006,7 @@
       const [history, setHistory] = useState([]);
       const [expandedStopId, setExpandedStopId] = useState(null); // For condensed view popover
       const [pendingFile, setPendingFile] = useState(null); // File ready to process
+      const [pendingGpx, setPendingGpx] = useState(null); // { text: gpxText, name: routeName, route: routeObj } - Featured route ready to process
 
       const mapRef = useRef(null);
       const mapInstanceRef = useRef(null);
@@ -2284,18 +2290,26 @@
         setPendingFile(file);
       };
 
-      // Process the staged file (or a directly passed file)
+      // Process the staged file, pending GPX, or a directly passed file
       const handleFile = async (file) => {
+        // Determine what we're processing: direct file, pending file, or pending GPX text
         const fileToProcess = file || pendingFile;
-        if (!fileToProcess) return;
+        const gpxToProcess = pendingGpx;
+
+        if (!fileToProcess && !gpxToProcess) return;
 
         if (searchCategories.length === 0) {
           setError('Please select at least one resource type to search.');
           return;
         }
 
+        // Determine display info
+        const displayName = fileToProcess?.name || gpxToProcess?.name || 'Route';
+        const displaySize = fileToProcess?.size || gpxToProcess?.size || 0;
+
         setError(null);
         setPendingFile(null); // Clear pending file
+        setPendingGpx(null); // Clear pending GPX
         setCurrentView('planner'); // Switch to planner view to show loading
         setIsLoading(true);
         setLoadingProgress(0);
@@ -2304,12 +2318,12 @@
         setRouteData(null);
         setPois([]);
 
-        const fileSize = (fileToProcess.size / 1024 / 1024).toFixed(1);
-        const isLargeFile = fileToProcess.size > 500000; // > 500KB
+        const fileSize = (displaySize / 1024 / 1024).toFixed(1);
+        const isLargeFile = displaySize > 500000; // > 500KB
         const categoryLabels = searchCategories.map(c => POI_CATEGORIES[c]?.label).filter(Boolean).join(', ');
 
         setLoadingSteps([
-          { id: 'parse', label: 'Parsing GPX file', detail: `${fileToProcess.name} (${fileSize}MB)`, status: 'active' },
+          { id: 'parse', label: 'Parsing GPX file', detail: `${displayName} (${fileSize}MB)`, status: 'active' },
           { id: 'pois', label: 'Querying OpenStreetMap', detail: `Searching: ${categoryLabels}`, status: 'pending' },
           { id: 'process', label: 'Processing results', detail: 'Calculating distances and filtering', status: 'pending' }
         ]);
@@ -2320,7 +2334,8 @@
           // Use setTimeout to allow UI to update before heavy parsing
           await new Promise(resolve => setTimeout(resolve, 50));
 
-          const text = await fileToProcess.text();
+          // Get GPX text - either from file or from pre-fetched GPX
+          const text = gpxToProcess ? gpxToProcess.text : await fileToProcess.text();
           setLoadingStep('Extracting track points...');
           setLoadingProgress(15);
 
@@ -3309,14 +3324,44 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
         );
       };
 
-      // Handle selecting a featured route
+      // Handle selecting a featured route - fetches GPX and stages it for user to review settings
       const handleSelectFeaturedRoute = async (route) => {
-        setSelectedFeaturedRoute(route);
-        setCurrentView('planner');
+        if (!route.gpxUrl) {
+          setError('This route does not have a GPX file available yet.');
+          return;
+        }
 
-        // If the route has a GPX URL, automatically load it
-        if (route.gpxUrl) {
-          await loadFeaturedRouteGpx(route);
+        // Clear any existing pending file/route
+        setPendingFile(null);
+        setPendingGpx(null);
+        setError(null);
+        setSelectedFeaturedRoute(route);
+
+        // Show loading state in the upload card area
+        setIsLoading(true);
+        setLoadingStep(`Loading ${route.name}...`);
+
+        try {
+          // Fetch the GPX text from URL
+          const gpxText = await fetchGpxFromUrl(route.gpxUrl);
+
+          // Stage the GPX for processing (user will click Scout Route)
+          setPendingGpx({
+            text: gpxText,
+            name: route.name,
+            size: gpxText.length,
+            route: route
+          });
+
+          // Scroll to top so user sees the staged route and settings
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        } catch (err) {
+          console.error('Failed to load featured route:', err);
+          setError(`Failed to load ${route.name}: ${err.message}`);
+        } finally {
+          setIsLoading(false);
+          setLoadingStep('');
         }
       };
 
@@ -3518,7 +3563,20 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
 
                   <div className="upload-card-content">
                     <div className="upload-card-left">
-                      {!pendingFile ? (
+                      {/* Show loading state when fetching featured route */}
+                      {isLoading && !routeData && loadingStep && (
+                        <div className="file-staged loading">
+                          <div className="file-staged-info">
+                            <span className="file-staged-icon">⏳</span>
+                            <div className="file-staged-details">
+                              <span className="file-staged-name">{loadingStep}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Show drop zone when nothing is staged */}
+                      {!isLoading && !pendingFile && !pendingGpx ? (
                         <div
                           className={`file-drop ${dragOver ? 'dragover' : ''}`}
                           onDragOver={handleDragOver}
@@ -3529,7 +3587,7 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
                         >
                           <div className="file-drop-icon">📁</div>
                           <h3>Drop your GPX file here</h3>
-                          <p>or click to browse</p>
+                          <p>or click to browse, or select a featured route below</p>
                           <input
                             ref={fileInputRef}
                             type="file"
@@ -3537,7 +3595,7 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
                             onChange={(e) => stageFile(e.target.files[0])}
                           />
                         </div>
-                      ) : (
+                      ) : pendingFile ? (
                         <div className="file-staged">
                           <div className="file-staged-info">
                             <span className="file-staged-icon">📄</span>
@@ -3562,7 +3620,32 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
                             <p className="scout-warning">Select at least one resource type →</p>
                           )}
                         </div>
-                      )}
+                      ) : pendingGpx ? (
+                        <div className="file-staged featured">
+                          <div className="file-staged-info">
+                            <span className="file-staged-icon">🏆</span>
+                            <div className="file-staged-details">
+                              <span className="file-staged-name">{pendingGpx.name}</span>
+                              <span className="file-staged-size">Featured Route • {(pendingGpx.size / 1024).toFixed(1)} KB</span>
+                            </div>
+                            <button
+                              className="file-staged-remove"
+                              onClick={() => { setPendingGpx(null); setSelectedFeaturedRoute(null); }}
+                              title="Remove route"
+                            >✕</button>
+                          </div>
+                          <button
+                            className="btn btn-primary scout-btn"
+                            onClick={() => handleFile()}
+                            disabled={searchCategories.length === 0}
+                          >
+                            🔍 Scout Route
+                          </button>
+                          {searchCategories.length === 0 && (
+                            <p className="scout-warning">Select at least one resource type →</p>
+                          )}
+                        </div>
+                      ) : null}
 
                       {history.length > 0 && (
                         <div className="recent-routes">
@@ -3706,7 +3789,7 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
                               </span>
                             ) : null}
                             <span className="featured-card-btn">
-                              Scout This Route
+                              Load Route
                               <Icons.ChevronRight />
                             </span>
                           </div>
