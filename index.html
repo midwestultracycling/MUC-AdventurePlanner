@@ -213,8 +213,8 @@
     .pill-count { background: rgba(0,65,124,0.1); padding: 2px 8px; border-radius: 10px; font-size: 11px; }
     .pill.active .pill-count { background: rgba(255,255,255,0.2); }
 
-    .export-panel { position: fixed; bottom: 24px; right: 24px; z-index: 200; }
-    .export-dropdown { position: absolute; bottom: 100%; right: 0; margin-bottom: 8px; background: var(--color-white); border-radius: 12px; box-shadow: 0 10px 40px rgba(5,24,41,0.15); padding: 8px; min-width: 220px; display: none; }
+    .export-panel { position: fixed; bottom: 24px; right: 24px; z-index: 1001; }
+    .export-dropdown { position: absolute; bottom: 100%; right: 0; margin-bottom: 8px; background: var(--color-white); border-radius: 12px; box-shadow: 0 10px 40px rgba(5,24,41,0.15); padding: 8px; min-width: 220px; display: none; z-index: 1002; }
     .export-dropdown.open { display: block; }
     .export-option { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
     .export-option:hover { background: var(--color-bg-alt); }
@@ -452,13 +452,91 @@
     .powered-by a { color: var(--color-primary); font-weight: 500; text-decoration: none; }
     .powered-by a:hover { text-decoration: underline; }
 
-    /* View Plan Floating Button */
-    .view-plan-fab { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; align-items: center; gap: 8px; background: var(--color-primary); color: white; padding: 14px 20px; border-radius: 50px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 12px rgba(0,65,124,0.3); cursor: pointer; border: none; transition: all 0.2s ease; opacity: 0; transform: translateY(20px); pointer-events: none; }
+    /* View Plan Floating Button - positioned to the LEFT of Export button */
+    .view-plan-fab { position: fixed; bottom: 24px; right: 160px; z-index: 1000; display: flex; align-items: center; gap: 8px; background: var(--color-primary); color: white; padding: 14px 20px; border-radius: 50px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 12px rgba(0,65,124,0.3); cursor: pointer; border: none; transition: all 0.2s ease; opacity: 0; transform: translateY(20px); pointer-events: none; }
     .view-plan-fab.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
     .view-plan-fab:hover { background: var(--color-primary-dark); box-shadow: 0 6px 16px rgba(0,65,124,0.4); transform: translateY(-2px); }
     .view-plan-fab.visible:hover { transform: translateY(-2px); }
     .view-plan-fab svg { width: 18px; height: 18px; }
     .view-plan-fab .fab-count { background: #F59E0B; color: #78350F; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 700; margin-left: 4px; }
+
+    /* Feature 1: Exclude miles inputs */
+    .exclude-miles-group { display: flex; align-items: center; gap: 8px; }
+    .exclude-miles-group input { width: 60px; height: 36px; padding: 0 8px; border: 1px solid var(--color-border); border-radius: 6px; font-size: 13px; text-align: center; }
+    .exclude-miles-group span { font-size: 12px; color: var(--color-text-muted); white-space: nowrap; }
+
+    /* Feature 3A: Enhanced mile markers with on-route highlighting */
+    .timeline-mile-marker-enhanced { position: relative; margin: 24px 0; padding-left: 0; display: flex; align-items: center; }
+    .mile-marker-badge { position: absolute; left: -36px; display: flex; align-items: center; gap: 0; }
+    .mile-marker-number { background: var(--color-primary); color: white; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 6px; white-space: nowrap; box-shadow: 0 2px 6px rgba(0, 65, 124, 0.25); position: relative; z-index: 2; }
+    .mile-marker-connector { width: 20px; height: 3px; background: var(--color-primary); position: relative; }
+    .mile-marker-connector::after { content: ''; position: absolute; right: -5px; top: 50%; transform: translateY(-50%); width: 10px; height: 10px; background: var(--color-primary); border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0, 65, 124, 0.3); }
+
+    /* On-route highlighting */
+    .timeline-item.on-route .timeline-content { background: #ECFDF5; border: 1px solid #6EE7B7; }
+    .timeline-item.on-route .timeline-content:hover { box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2); border-color: var(--color-accent); }
+    .timeline-item.on-route .timeline-marker { border-color: #6EE7B7; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); }
+
+    /* Feature 3B: Mile Navigation Bar */
+    .mile-nav { position: sticky; top: 73px; z-index: 99; background: var(--color-white); border: 1px solid var(--color-border); border-radius: 10px; padding: 18px 16px 12px 16px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0, 65, 124, 0.08); }
+    .mile-nav-inner { display: flex; align-items: center; gap: 16px; }
+    .mile-nav-label { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+    .mile-nav-track { flex: 1; position: relative; height: 52px; display: flex; align-items: center; overflow: visible; }
+    .mile-nav-line { position: absolute; left: 0; right: 0; height: 3px; background: var(--color-border); border-radius: 2px; }
+    .mile-nav-buttons { display: flex; justify-content: space-between; width: 100%; position: relative; overflow-x: auto; gap: 4px; padding: 10px 0 4px 0; }
+    .mile-nav-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: none; cursor: pointer; padding: 2px; transition: transform 0.2s ease; position: relative; flex-shrink: 0; }
+    .mile-nav-btn:hover { transform: translateY(-2px); }
+    .mile-nav-btn:hover .mile-nav-dot { transform: scale(1.15); box-shadow: 0 4px 12px rgba(0, 65, 124, 0.3); }
+    .mile-nav-dot { width: 28px; height: 28px; border-radius: 50%; background: var(--color-white); border: 2px solid var(--color-border); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 9px; font-weight: 700; color: var(--color-text-muted); transition: all 0.2s ease; }
+    .mile-nav-btn.active .mile-nav-dot, .mile-nav-btn.passed .mile-nav-dot { background: var(--color-primary); border-color: var(--color-primary); color: white; }
+    .mile-nav-btn.active .mile-nav-dot { box-shadow: 0 0 0 3px rgba(0, 65, 124, 0.2); }
+    .mile-nav-mile { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 9px; font-weight: 600; color: var(--color-text-muted); }
+    .mile-nav-btn.active .mile-nav-mile { color: var(--color-primary); }
+    .mile-nav-resources { position: absolute; top: -4px; right: -4px; min-width: 14px; height: 14px; background: var(--color-secondary); color: white; border-radius: 7px; font-size: 8px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 3px; }
+
+    /* Ultra Route Navigation (200+ miles) */
+    .ultra-nav { position: sticky; top: 73px; z-index: 99; background: var(--color-white); border: 1px solid var(--color-border); border-radius: 10px; padding: 16px 16px 12px 16px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0, 65, 124, 0.08); }
+    .ultra-nav-inner { display: flex; align-items: center; gap: 16px; }
+    .ultra-nav-info { display: flex; flex-direction: column; gap: 2px; min-width: 90px; }
+    .ultra-nav-label { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px; font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .ultra-nav-route { font-size: 12px; font-weight: 600; color: var(--color-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+    .ultra-nav-scroll { display: flex; align-items: center; gap: 4px; overflow-x: auto; padding: 6px 0; flex: 1; scrollbar-width: thin; scrollbar-color: var(--color-border) transparent; }
+    .ultra-nav-scroll::-webkit-scrollbar { height: 4px; }
+    .ultra-nav-scroll::-webkit-scrollbar-track { background: transparent; }
+    .ultra-nav-scroll::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 2px; }
+    .ultra-nav-btn { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 1px; background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all 0.2s ease; position: relative; }
+    .ultra-nav-btn:hover { background: var(--color-bg-alt); }
+    .ultra-nav-btn.active { background: var(--color-primary); }
+    .ultra-nav-btn .ultra-mile { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; font-weight: 700; color: var(--color-text); white-space: nowrap; }
+    .ultra-nav-btn.passed .ultra-mile { color: var(--color-primary); }
+    .ultra-nav-btn.active .ultra-mile { color: white; }
+    .ultra-nav-btn .ultra-resources { font-size: 8px; color: var(--color-text-muted); white-space: nowrap; }
+    .ultra-nav-btn.active .ultra-resources { color: rgba(255,255,255,0.8); }
+    .ultra-nav-btn .ultra-badge { position: absolute; top: -2px; right: 2px; min-width: 12px; height: 12px; background: var(--color-secondary); color: white; border-radius: 6px; font-size: 7px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 2px; }
+    .ultra-nav-divider { width: 1px; height: 28px; background: var(--color-border); flex-shrink: 0; margin: 0 2px; }
+    .ultra-nav-jump { display: flex; align-items: center; gap: 6px; padding-left: 12px; border-left: 1px solid var(--color-border); margin-left: 8px; }
+    .ultra-nav-jump label { font-size: 10px; color: var(--color-text-muted); white-space: nowrap; }
+    .ultra-nav-jump input { width: 55px; padding: 5px 6px; border: 1px solid var(--color-border); border-radius: 4px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; text-align: center; }
+    .ultra-nav-jump button { padding: 5px 10px; background: var(--color-primary); color: white; border: none; border-radius: 4px; font-size: 10px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .ultra-nav-jump button:hover { background: var(--color-primary-dark); }
+
+    /* Timeline legend */
+    .timeline-legend { display: flex; gap: 20px; margin-bottom: 16px; padding: 10px 14px; background: var(--color-bg-alt); border-radius: 8px; font-size: 12px; }
+    .timeline-legend-item { display: flex; align-items: center; gap: 6px; }
+    .timeline-legend-swatch { width: 20px; height: 20px; border-radius: 4px; border: 2px solid; }
+    .timeline-legend-swatch.on-route { background: #ECFDF5; border-color: #6EE7B7; }
+    .timeline-legend-swatch.off-route { background: var(--color-white); border-color: var(--color-border); }
+
+    /* Back to main site link */
+    .back-to-site { font-size: 13px; color: var(--color-text-muted); text-decoration: none; display: flex; align-items: center; gap: 4px; transition: color 0.2s; }
+    .back-to-site:hover { color: var(--color-primary); }
+    .back-to-site svg { width: 14px; height: 14px; }
+
+    @media (max-width: 768px) {
+      .mile-nav-buttons { justify-content: flex-start; }
+      .ultra-nav-jump { display: none; }
+      .exclude-miles-group { flex-wrap: wrap; }
+    }
   </style>
 </head>
 <body>
@@ -1965,7 +2043,11 @@
 
     // Fetch GPX from URL (for pre-loaded featured routes)
     async function fetchGpxFromUrl(url) {
-      const response = await fetch(url);
+      // Add cache-busting to ensure fresh GPX data
+      const cacheBuster = `?_=${Date.now()}`;
+      const urlWithCacheBust = url.includes('?') ? `${url}&_=${Date.now()}` : `${url}${cacheBuster}`;
+
+      const response = await fetch(urlWithCacheBust);
       if (!response.ok) {
         throw new Error(`Failed to fetch GPX: ${response.status} ${response.statusText}`);
       }
@@ -2007,6 +2089,8 @@
       const [expandedStopId, setExpandedStopId] = useState(null); // For condensed view popover
       const [pendingFile, setPendingFile] = useState(null); // File ready to process
       const [pendingGpx, setPendingGpx] = useState(null); // { text: gpxText, name: routeName, route: routeObj } - Featured route ready to process
+      const [excludeStartMiles, setExcludeStartMiles] = useState(0); // Miles to exclude from beginning
+      const [excludeEndMiles, setExcludeEndMiles] = useState(0); // Miles to exclude from end
 
       const mapRef = useRef(null);
       const mapInstanceRef = useRef(null);
@@ -2081,13 +2165,24 @@
         return enrichPOIs(pois, routeData.distance, getStartDateTime(), avgSpeed, plannedStops, possibleStops);
       }, [pois, routeData, avgSpeed, startDate, startTime, plannedStops, possibleStops]);
 
-      const filteredPOIs = useMemo(() =>
-        enrichedPOIs.filter(p =>
-          activeFilters.includes(p.category) &&
-          p.distanceOffRoute <= maxDetourDistance
-        ),
-        [enrichedPOIs, activeFilters, maxDetourDistance]
-      );
+      const filteredPOIs = useMemo(() => {
+        if (!routeData) return [];
+        const totalDistanceKm = routeData.distance;
+        const excludeStartKm = useMiles ? miToKm(excludeStartMiles) : excludeStartMiles;
+        const excludeEndKm = useMiles ? miToKm(excludeEndMiles) : excludeEndMiles;
+
+        return enrichedPOIs.filter(p => {
+          // Check category filter
+          if (!activeFilters.includes(p.category)) return false;
+          // Check detour distance
+          if (p.distanceOffRoute > maxDetourDistance) return false;
+          // Check exclude start miles
+          if (excludeStartKm > 0 && p.distanceKm < excludeStartKm) return false;
+          // Check exclude end miles
+          if (excludeEndKm > 0 && p.distanceKm > (totalDistanceKm - excludeEndKm)) return false;
+          return true;
+        });
+      }, [enrichedPOIs, activeFilters, maxDetourDistance, routeData, excludeStartMiles, excludeEndMiles, useMiles]);
 
       const plannedStopsCount = Object.keys(plannedStops).filter(id => plannedStops[id] > 0).length;
       const possibleStopsCount = Object.keys(possibleStops).filter(id => possibleStops[id]).length;
@@ -2580,6 +2675,7 @@
 
           try {
             const midIdx = Math.floor(routeData.coordinates.length / 2);
+
             const map = L.map(mapRef.current).setView(
               [routeData.coordinates[midIdx][0], routeData.coordinates[midIdx][1]],
               10
@@ -2910,114 +3006,186 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
         const doc = new jsPDF('p', 'mm', 'a4'); // A4 portrait
         const pageWidth = 210;
         const pageHeight = 297;
-        const margin = 12;
-        const colWidth = (pageWidth - margin * 3) / 2; // Two columns
+        const margin = 10;
+        const contentWidth = pageWidth - margin * 2;
 
         // Only include selected stops in export
         const stopsToExport = selectedStops;
 
         // Category colors for PDF
         const categoryColors = {
-          water: { bg: [219, 234, 254], text: [30, 64, 175] },
-          camp: { bg: [220, 252, 231], text: [21, 128, 61] },
-          food: { bg: [254, 243, 199], text: [180, 83, 9] },
-          store: { bg: [243, 232, 255], text: [126, 34, 206] },
-          scenic: { bg: [254, 226, 226], text: [185, 28, 28] }
-        };
-
-        const categoryIcons = {
-          water: '💧',
-          camp: '⛺',
-          food: '🍴',
-          store: '🏪',
-          scenic: '📸'
+          water: { bg: [219, 234, 254], text: [30, 64, 175], label: 'Water' },
+          camp: { bg: [220, 252, 231], text: [21, 128, 61], label: 'Camp' },
+          food: { bg: [254, 243, 199], text: [180, 83, 9], label: 'Food' },
+          store: { bg: [243, 232, 255], text: [126, 34, 206], label: 'Store' },
+          scenic: { bg: [254, 226, 226], text: [185, 28, 28], label: 'Scenic' }
         };
 
         // --- HEADER ---
-        doc.setFillColor(26, 26, 26);
-        doc.rect(0, 0, pageWidth, 18, 'F');
+        doc.setFillColor(0, 65, 124); // Mishigami blue
+        doc.rect(0, 0, pageWidth, 14, 'F');
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(14);
+        doc.setFontSize(12);
         doc.setFont(undefined, 'bold');
-        doc.text('RouteScout', margin, 12);
-        doc.setFontSize(9);
-        doc.setFont(undefined, 'normal');
-        doc.text('Trip Plan', pageWidth - margin - 20, 12);
-
-        // --- LEFT COLUMN: Route Details ---
-        let leftY = 26;
-
-        // Route name
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(14);
-        doc.setFont(undefined, 'bold');
-        const routeNameLines = doc.splitTextToSize(routeData.name, colWidth);
-        doc.text(routeNameLines, margin, leftY);
-        leftY += routeNameLines.length * 5 + 4;
-
-        // Stats box
-        doc.setFillColor(249, 250, 251);
-        doc.roundedRect(margin, leftY, colWidth, 32, 2, 2, 'F');
-
+        doc.text('RouteScout', margin, 9);
         doc.setFontSize(8);
         doc.setFont(undefined, 'normal');
-        doc.setTextColor(107, 114, 128);
+        doc.text('Trip Plan', pageWidth - margin - 15, 9);
 
-        const statsY = leftY + 6;
-        doc.text('Distance', margin + 4, statsY);
-        doc.text('Elevation', margin + 4, statsY + 8);
-        doc.text('Start', margin + 4, statsY + 16);
-        doc.text('Est. Finish', margin + 4, statsY + 24);
+        let currentY = 20;
 
+        // --- ROUTE NAME ---
         doc.setTextColor(0, 0, 0);
+        doc.setFontSize(14);
         doc.setFont(undefined, 'bold');
-        doc.text(formatDistance(routeData.distance), margin + 28, statsY);
-        doc.text(formatElevation(routeData.elevation), margin + 28, statsY + 8);
-        doc.text(`${formatDate(getStartDateTime())} ${formatTime(getStartDateTime())}`, margin + 28, statsY + 16);
-        doc.text(formatTime(getEndDateTime()), margin + 28, statsY + 24);
+        const routeNameLines = doc.splitTextToSize(routeData.name, contentWidth);
+        doc.text(routeNameLines, margin, currentY);
+        currentY += routeNameLines.length * 5 + 3;
 
-        // Second column of stats
-        doc.setFont(undefined, 'normal');
-        doc.setTextColor(107, 114, 128);
-        doc.text('Avg Speed', margin + colWidth/2 + 4, statsY);
-        doc.text('Planned Stops', margin + colWidth/2 + 4, statsY + 8);
-        doc.text('Possible Stops', margin + colWidth/2 + 4, statsY + 16);
-        doc.text('Stop Time', margin + colWidth/2 + 4, statsY + 24);
+        // --- STATS ROW (full width, 2 rows of 4 stats each) ---
+        doc.setFillColor(249, 250, 251);
+        doc.roundedRect(margin, currentY, contentWidth, 20, 2, 2, 'F');
 
-        doc.setTextColor(0, 0, 0);
-        doc.setFont(undefined, 'bold');
-        doc.text(formatSpeed(avgSpeed), margin + colWidth/2 + 32, statsY);
-        doc.text(String(plannedStopsCount), margin + colWidth/2 + 32, statsY + 8);
-        doc.text(String(possibleStopsCount), margin + colWidth/2 + 32, statsY + 16);
-        doc.text(`${totalStopMinutes} min`, margin + colWidth/2 + 32, statsY + 24);
+        const statColWidth = contentWidth / 4;
+        const statsData = [
+          { label: 'Distance', value: formatDistance(routeData.distance) },
+          { label: 'Elevation', value: formatElevation(routeData.elevation) },
+          { label: 'Avg Speed', value: formatSpeed(avgSpeed) },
+          { label: 'Stop Time', value: `${totalStopMinutes} min` },
+          { label: 'Start', value: `${formatDate(getStartDateTime())} ${formatTime(getStartDateTime())}` },
+          { label: 'Est. Finish', value: formatTime(getEndDateTime()) },
+          { label: 'Planned', value: String(plannedStopsCount) },
+          { label: 'Possible', value: String(possibleStopsCount) }
+        ];
 
-        leftY += 38;
+        statsData.forEach((stat, idx) => {
+          const col = idx % 4;
+          const row = Math.floor(idx / 4);
+          const x = margin + col * statColWidth + 3;
+          const y = currentY + 5 + row * 9;
 
-        // --- RIGHT COLUMN: Map & Elevation ---
-        const rightX = margin + colWidth + margin;
-        let rightY = 26;
+          doc.setFontSize(6);
+          doc.setFont(undefined, 'normal');
+          doc.setTextColor(107, 114, 128);
+          doc.text(stat.label, x, y);
 
-        // Capture map
+          doc.setFontSize(8);
+          doc.setFont(undefined, 'bold');
+          doc.setTextColor(0, 0, 0);
+          doc.text(stat.value, x, y + 4);
+        });
+
+        currentY += 24;
+
+        // --- MAP (full width, maintain aspect ratio) ---
         try {
           const mapEl = document.getElementById('map');
-          if (mapEl) {
+          if (mapEl && mapInstanceRef.current) {
+            const map = mapInstanceRef.current;
+
+            // Force map to invalidate and fit to route bounds for clean capture
+            map.invalidateSize();
+
+            // Wait for tiles to fully load
+            await new Promise(resolve => {
+              let tilesLoaded = 0;
+              const tiles = mapEl.querySelectorAll('.leaflet-tile');
+              const totalTiles = tiles.length;
+
+              if (totalTiles === 0) {
+                setTimeout(resolve, 500);
+                return;
+              }
+
+              const checkComplete = () => {
+                tilesLoaded++;
+                if (tilesLoaded >= totalTiles) {
+                  setTimeout(resolve, 300);
+                }
+              };
+
+              tiles.forEach(tile => {
+                if (tile.complete) {
+                  checkComplete();
+                } else {
+                  tile.onload = checkComplete;
+                  tile.onerror = checkComplete;
+                }
+              });
+
+              setTimeout(resolve, 2000); // Fallback
+            });
+
+            // Get transform values from Leaflet panes BEFORE cloning
+            const getTransformOffset = (pane) => {
+              if (!pane) return { x: 0, y: 0 };
+              const transform = pane.style.transform;
+              const match = transform.match(/translate3d\((-?\d+(?:\.\d+)?)\s*px,\s*(-?\d+(?:\.\d+)?)\s*px/);
+              if (match) {
+                return { x: parseFloat(match[1]), y: parseFloat(match[2]) };
+              }
+              const match2d = transform.match(/translate\((-?\d+(?:\.\d+)?)\s*px,\s*(-?\d+(?:\.\d+)?)\s*px/);
+              if (match2d) {
+                return { x: parseFloat(match2d[1]), y: parseFloat(match2d[2]) };
+              }
+              return { x: 0, y: 0 };
+            };
+
+            const tileOffset = getTransformOffset(map.getPane('tilePane'));
+            const overlayOffset = getTransformOffset(map.getPane('overlayPane'));
+            const markerOffset = getTransformOffset(map.getPane('markerPane'));
+
             const mapCanvas = await html2canvas(mapEl, {
               useCORS: true,
               allowTaint: true,
               scale: 2,
-              logging: false
+              logging: false,
+              foreignObjectRendering: false,
+              onclone: (clonedDoc) => {
+                const clonedMap = clonedDoc.getElementById('map');
+                if (!clonedMap) return;
+
+                // Helper to apply transform correctly in cloned document
+                const applyTransform = (selector, offset) => {
+                  const el = clonedMap.querySelector(selector);
+                  if (el) {
+                    // Use translate (not translate3d) for better html2canvas compatibility
+                    el.style.transform = `translate(${offset.x}px, ${offset.y}px)`;
+                    el.style.webkitTransform = `translate(${offset.x}px, ${offset.y}px)`;
+                  }
+                };
+
+                // Apply the same transforms to cloned panes
+                applyTransform('.leaflet-tile-pane', tileOffset);
+                applyTransform('.leaflet-overlay-pane', overlayOffset);
+                applyTransform('.leaflet-marker-pane', markerOffset);
+                applyTransform('.leaflet-shadow-pane', markerOffset);
+                applyTransform('.leaflet-tooltip-pane', markerOffset);
+
+                // Also ensure SVG inside overlay pane has no additional transform
+                const svg = clonedMap.querySelector('.leaflet-overlay-pane svg');
+                if (svg) {
+                  // Remove any transform on the SVG itself - the pane transform handles it
+                  svg.style.transform = 'none';
+                }
+              }
             });
-            const mapImgData = mapCanvas.toDataURL('image/jpeg', 0.85);
-            const mapHeight = 55;
-            doc.addImage(mapImgData, 'JPEG', rightX, rightY, colWidth, mapHeight);
-            rightY += mapHeight + 4;
+
+            const mapImgData = mapCanvas.toDataURL('image/jpeg', 0.9);
+
+            // Calculate height maintaining aspect ratio
+            const mapAspect = mapCanvas.height / mapCanvas.width;
+            const mapWidth = contentWidth;
+            const mapHeight = Math.min(mapWidth * mapAspect, 70); // Max height 70mm
+
+            doc.addImage(mapImgData, 'JPEG', margin, currentY, mapWidth, mapHeight);
+            currentY += mapHeight + 2;
           }
         } catch (e) {
           console.log('Could not capture map:', e);
-          rightY += 4;
         }
 
-        // Capture elevation profile
+        // --- ELEVATION PROFILE (full width, maintain aspect ratio) ---
         try {
           const elevEl = document.querySelector('.elevation-profile');
           if (elevEl) {
@@ -3026,135 +3194,190 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
               logging: false,
               backgroundColor: '#ffffff'
             });
-            const elevImgData = elevCanvas.toDataURL('image/jpeg', 0.85);
-            const elevHeight = 28;
-            doc.addImage(elevImgData, 'JPEG', rightX, rightY, colWidth, elevHeight);
-            rightY += elevHeight + 4;
+            const elevImgData = elevCanvas.toDataURL('image/jpeg', 0.9);
+
+            // Calculate height maintaining aspect ratio
+            const elevAspect = elevCanvas.height / elevCanvas.width;
+            const elevWidth = contentWidth;
+            const elevHeight = Math.min(elevWidth * elevAspect, 25); // Max height 25mm
+
+            doc.addImage(elevImgData, 'JPEG', margin, currentY, elevWidth, elevHeight);
+            currentY += elevHeight + 3;
           }
         } catch (e) {
           console.log('Could not capture elevation:', e);
         }
 
-        // --- SELECTED STOPS (below both columns) ---
-        let stopsY = Math.max(leftY, rightY) + 4;
-
-        doc.setFillColor(26, 26, 26);
-        doc.rect(margin, stopsY, pageWidth - margin * 2, 7, 'F');
+        // --- SELECTED STOPS HEADER ---
+        doc.setFillColor(0, 65, 124);
+        doc.rect(margin, currentY, contentWidth, 6, 'F');
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(9);
+        doc.setFontSize(8);
         doc.setFont(undefined, 'bold');
-        doc.text(`Selected Stops (${stopsToExport.length})`, margin + 3, stopsY + 5);
-        stopsY += 10;
+        doc.text(`Selected Stops (${stopsToExport.length})`, margin + 2, currentY + 4);
+        currentY += 8;
 
         if (stopsToExport.length === 0) {
-          doc.setFontSize(9);
+          doc.setFontSize(8);
           doc.setTextColor(107, 114, 128);
           doc.setFont(undefined, 'normal');
-          doc.text('No stops selected. Mark stops as "Planned" or "Possible" to include them.', margin + 3, stopsY + 4);
+          doc.text('No stops selected. Mark stops as "Planned" or "Possible" to include them.', margin + 2, currentY + 4);
+          currentY += 10;
         } else {
-          // Calculate how many stops can fit
-          const stopHeight = 9;
-          const availableHeight = pageHeight - stopsY - margin;
-          const stopsPerPage = Math.floor(availableHeight / stopHeight);
-          const maxFirstPageStops = Math.min(stopsToExport.length, stopsPerPage);
+          // Two-column layout for stops
+          const stopColWidth = (contentWidth - 4) / 2;
+          const stopHeight = 6;
+          const stopsPerColumn = Math.floor((pageHeight - currentY - 25) / stopHeight); // Leave room for footer
 
-          stopsToExport.forEach((poi, idx) => {
+          let stopIdx = 0;
+          let pageNum = 1;
+
+          while (stopIdx < stopsToExport.length) {
             // Check if we need a new page
-            if (stopsY > pageHeight - margin - stopHeight) {
-              doc.addPage();
-              stopsY = margin;
+            if (pageNum > 1 || (stopIdx > 0 && stopIdx % (stopsPerColumn * 2) === 0)) {
+              if (stopIdx > 0) {
+                doc.addPage();
+                currentY = margin;
 
-              // Add header on new page
-              doc.setFillColor(26, 26, 26);
-              doc.rect(margin, stopsY, pageWidth - margin * 2, 7, 'F');
-              doc.setTextColor(255, 255, 255);
-              doc.setFontSize(9);
+                // Header on continuation page
+                doc.setFillColor(0, 65, 124);
+                doc.rect(margin, currentY, contentWidth, 6, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(8);
+                doc.setFont(undefined, 'bold');
+                doc.text(`Selected Stops (continued - page ${pageNum})`, margin + 2, currentY + 4);
+                currentY += 8;
+              }
+              pageNum++;
+            }
+
+            // Render stops in two columns
+            const stopsThisPage = Math.min(stopsToExport.length - stopIdx, stopsPerColumn * 2);
+
+            for (let i = 0; i < stopsThisPage; i++) {
+              const poi = stopsToExport[stopIdx + i];
+              const col = i % 2;
+              const row = Math.floor(i / 2);
+              const x = margin + col * (stopColWidth + 4);
+              const y = currentY + row * stopHeight;
+
+              const colors = categoryColors[poi.category] || categoryColors.water;
+
+              // Row background
+              doc.setFillColor(colors.bg[0], colors.bg[1], colors.bg[2]);
+              doc.roundedRect(x, y, stopColWidth, stopHeight - 1, 1, 1, 'F');
+
+              // Time
+              doc.setFontSize(6);
               doc.setFont(undefined, 'bold');
-              doc.text(`Selected Stops (continued)`, margin + 3, stopsY + 5);
-              stopsY += 10;
-            }
-
-            const colors = categoryColors[poi.category] || categoryColors.water;
-
-            // Stop row background
-            doc.setFillColor(colors.bg[0], colors.bg[1], colors.bg[2]);
-            doc.roundedRect(margin, stopsY, pageWidth - margin * 2, stopHeight - 1, 1, 1, 'F');
-
-            // Category icon (emoji approximation - use first letter)
-            doc.setFontSize(7);
-            doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
-            const icon = categoryIcons[poi.category] || '📍';
-            doc.text(icon, margin + 2, stopsY + 5.5);
-
-            // Time
-            doc.setFontSize(8);
-            doc.setFont(undefined, 'bold');
-            doc.setTextColor(0, 0, 0);
-            doc.text(formatTime(poi.eta), margin + 10, stopsY + 5.5);
-
-            // Name
-            doc.setFont(undefined, 'normal');
-            const nameMaxWidth = 50;
-            let displayName = poi.name;
-            if (doc.getTextWidth(displayName) > nameMaxWidth) {
-              while (doc.getTextWidth(displayName + '...') > nameMaxWidth && displayName.length > 0) {
-                displayName = displayName.slice(0, -1);
-              }
-              displayName += '...';
-            }
-            doc.text(displayName, margin + 26, stopsY + 5.5);
-
-            // Type badge
-            doc.setFontSize(7);
-            doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
-            doc.text(poi.type, margin + 80, stopsY + 5.5);
-
-            // Distance
-            doc.setTextColor(107, 114, 128);
-            doc.text(formatDistance(poi.distanceKm), margin + 115, stopsY + 5.5);
-
-            // Detour
-            doc.text(formatDetour(poi.distanceOffRoute), margin + 135, stopsY + 5.5);
-
-            // Stop type & time
-            if (poi.isPlannedStop) {
-              doc.setFillColor(251, 191, 36);
-              doc.roundedRect(margin + 155, stopsY + 1.5, 18, 5, 1, 1, 'F');
               doc.setTextColor(0, 0, 0);
-              doc.setFontSize(6);
-              doc.text(`${poi.stopMinutes}min`, margin + 156, stopsY + 5);
-            } else if (poi.isPossibleStop) {
-              doc.setFillColor(191, 219, 254);
-              doc.roundedRect(margin + 155, stopsY + 1.5, 18, 5, 1, 1, 'F');
-              doc.setTextColor(30, 64, 175);
-              doc.setFontSize(6);
-              doc.text('possible', margin + 156, stopsY + 5);
-            }
+              doc.text(formatTime(poi.eta), x + 1.5, y + 3.8);
 
-            // Hours info
-            if (poi.hoursInfo?.display) {
+              // Category indicator (short text instead of emoji)
+              doc.setFontSize(5);
+              doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
+              doc.text(colors.label.substring(0, 1).toUpperCase(), x + 13, y + 3.8);
+
+              // Name (truncated)
+              doc.setFont(undefined, 'normal');
               doc.setFontSize(6);
-              if (poi.hoursInfo.isOpen === true) {
-                doc.setTextColor(5, 150, 105);
-              } else if (poi.hoursInfo.isOpen === false) {
-                doc.setTextColor(220, 38, 38);
-              } else {
-                doc.setTextColor(107, 114, 128);
+              doc.setTextColor(0, 0, 0);
+              let displayName = poi.name;
+              const nameMaxWidth = 32;
+              if (doc.getTextWidth(displayName) > nameMaxWidth) {
+                while (doc.getTextWidth(displayName + '..') > nameMaxWidth && displayName.length > 0) {
+                  displayName = displayName.slice(0, -1);
+                }
+                displayName += '..';
               }
-              const hoursText = poi.hoursInfo.display.length > 12
-                ? poi.hoursInfo.display.substring(0, 12) + '...'
-                : poi.hoursInfo.display;
-              doc.text(hoursText, margin + 175, stopsY + 5.5);
+              doc.text(displayName, x + 17, y + 3.8);
+
+              // Distance on route
+              doc.setFontSize(5);
+              doc.setTextColor(107, 114, 128);
+              doc.text(formatDistance(poi.distanceKm), x + 52, y + 3.8);
+
+              // Detour distance
+              doc.text(formatDetour(poi.distanceOffRoute), x + 65, y + 3.8);
+
+              // Planned/Possible badge
+              if (poi.isPlannedStop) {
+                doc.setFillColor(251, 191, 36);
+                doc.roundedRect(x + stopColWidth - 14, y + 1, 12, 4, 0.5, 0.5, 'F');
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(5);
+                doc.text(`${poi.stopMinutes}m`, x + stopColWidth - 13, y + 3.5);
+              } else if (poi.isPossibleStop) {
+                doc.setFillColor(191, 219, 254);
+                doc.roundedRect(x + stopColWidth - 14, y + 1, 12, 4, 0.5, 0.5, 'F');
+                doc.setTextColor(30, 64, 175);
+                doc.setFontSize(5);
+                doc.text('maybe', x + stopColWidth - 13, y + 3.5);
+              }
             }
 
-            stopsY += stopHeight;
-          });
+            stopIdx += stopsThisPage;
+            currentY += Math.ceil(stopsThisPage / 2) * stopHeight + 2;
+          }
         }
 
-        // Footer on last page
-        doc.setFontSize(7);
-        doc.setTextColor(156, 163, 175);
-        doc.text('Generated by RouteScout • routescout.app', margin, pageHeight - 6);
+        // --- FOOTER with branding and QR code ---
+        const footerY = pageHeight - 18;
+
+        // Footer background
+        doc.setFillColor(249, 250, 251);
+        doc.rect(0, footerY, pageWidth, 18, 'F');
+
+        // Divider line
+        doc.setDrawColor(200, 200, 200);
+        doc.line(margin, footerY, pageWidth - margin, footerY);
+
+        // Left side: Branding
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(0, 65, 124);
+        doc.text('RouteScout', margin, footerY + 6);
+        doc.setFont(undefined, 'normal');
+        doc.setFontSize(6);
+        doc.setTextColor(107, 114, 128);
+        doc.text('A tool by Midwest Ultra Cycling', margin, footerY + 10);
+        doc.text('routes.midwestultracycling.com', margin, footerY + 14);
+
+        // Center: Call to action
+        doc.setFontSize(6);
+        doc.setTextColor(107, 114, 128);
+        const ctaText = 'Plan your own adventure at';
+        const ctaWidth = doc.getTextWidth(ctaText);
+        doc.text(ctaText, (pageWidth - ctaWidth) / 2, footerY + 8);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(0, 65, 124);
+        const urlText = 'routes.midwestultracycling.com';
+        const urlWidth = doc.getTextWidth(urlText);
+        doc.text(urlText, (pageWidth - urlWidth) / 2, footerY + 12);
+
+        // Right side: QR Code (simple text-based representation since we can't generate real QR)
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(pageWidth - margin - 14, footerY + 2, 14, 14, 1, 1, 'F');
+        doc.setFontSize(4);
+        doc.setTextColor(0, 0, 0);
+        doc.text('SCAN', pageWidth - margin - 12, footerY + 8);
+        doc.text('FOR', pageWidth - margin - 11, footerY + 11);
+        doc.text('MORE', pageWidth - margin - 12, footerY + 14);
+
+        // Draw a simple QR-like pattern
+        doc.setFillColor(0, 0, 0);
+        const qrX = pageWidth - margin - 13;
+        const qrY = footerY + 3;
+        const qrSize = 12;
+        const cellSize = qrSize / 8;
+        // Corner markers
+        [[0,0], [0,5], [5,0]].forEach(([cx, cy]) => {
+          doc.rect(qrX + cx * cellSize, qrY + cy * cellSize, cellSize * 3, cellSize * 3, 'F');
+          doc.setFillColor(255, 255, 255);
+          doc.rect(qrX + (cx + 0.5) * cellSize, qrY + (cy + 0.5) * cellSize, cellSize * 2, cellSize * 2, 'F');
+          doc.setFillColor(0, 0, 0);
+          doc.rect(qrX + (cx + 1) * cellSize, qrY + (cy + 1) * cellSize, cellSize, cellSize, 'F');
+        });
 
         doc.save(`${routeData.name.replace(/[^a-z0-9]/gi, '-')}-trip-plan.pdf`);
         setShowExport(false);
@@ -3512,9 +3735,22 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
           <div>
             <header>
               <div className="container header-content">
-                <div className="logo">
-                  <Icons.Bike />
-                  RouteScout
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div className="logo">
+                    <Icons.Bike />
+                    RouteScout
+                  </div>
+                  <a
+                    href="https://midwestultracycling.com"
+                    className="back-to-site"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                    midwestultracycling.com
+                  </a>
                 </div>
                 <div className="header-actions">
                   <div className="unit-toggle">
@@ -3609,16 +3845,6 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
                               title="Remove file"
                             >✕</button>
                           </div>
-                          <button
-                            className="btn btn-primary scout-btn"
-                            onClick={() => handleFile()}
-                            disabled={searchCategories.length === 0}
-                          >
-                            🔍 Scout Route
-                          </button>
-                          {searchCategories.length === 0 && (
-                            <p className="scout-warning">Select at least one resource type →</p>
-                          )}
                         </div>
                       ) : pendingGpx ? (
                         <div className="file-staged featured">
@@ -3634,16 +3860,6 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
                               title="Remove route"
                             >✕</button>
                           </div>
-                          <button
-                            className="btn btn-primary scout-btn"
-                            onClick={() => handleFile()}
-                            disabled={searchCategories.length === 0}
-                          >
-                            🔍 Scout Route
-                          </button>
-                          {searchCategories.length === 0 && (
-                            <p className="scout-warning">Select at least one resource type →</p>
-                          )}
                         </div>
                       ) : null}
 
@@ -3737,6 +3953,23 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
                             ))}
                           </div>
                         </div>
+                        {/* GO Button */}
+                        <button
+                          className="btn btn-primary scout-btn"
+                          onClick={() => handleFile()}
+                          disabled={searchCategories.length === 0 || (!pendingFile && !pendingGpx)}
+                          style={{ marginTop: '16px' }}
+                        >
+                          GO
+                        </button>
+                        {searchCategories.length === 0 && (
+                          <p className="scout-warning" style={{ marginTop: '8px' }}>Select at least one resource type</p>
+                        )}
+                        {!pendingFile && !pendingGpx && searchCategories.length > 0 && (
+                          <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '8px', textAlign: 'center' }}>
+                            ← Upload a GPX file or select a featured route
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -3816,9 +4049,22 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
         <div>
           <header>
             <div className="container header-content">
-              <div className="logo" style={{ cursor: 'pointer' }} onClick={goToHomepage}>
-                <Icons.Bike />
-                RouteScout
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div className="logo" style={{ cursor: 'pointer' }} onClick={goToHomepage}>
+                  <Icons.Bike />
+                  RouteScout
+                </div>
+                <a
+                  href="https://midwestultracycling.com"
+                  className="back-to-site"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                  </svg>
+                  midwestultracycling.com
+                </a>
               </div>
               <div className="header-actions">
                 <div className="unit-toggle">
@@ -4331,6 +4577,32 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
                       <option value={99999}>Show all</option>
                     </select>
                   </div>
+                  <div className="form-group">
+                    <label>Exclude Start</label>
+                    <div className="exclude-miles-group">
+                      <input
+                        type="number"
+                        min="0"
+                        max={routeData ? Math.floor(useMiles ? kmToMi(routeData.distance) / 2 : routeData.distance / 2) : 100}
+                        value={excludeStartMiles}
+                        onChange={(e) => setExcludeStartMiles(Math.max(0, Number(e.target.value) || 0))}
+                      />
+                      <span>{useMiles ? 'mi' : 'km'}</span>
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Exclude End</label>
+                    <div className="exclude-miles-group">
+                      <input
+                        type="number"
+                        min="0"
+                        max={routeData ? Math.floor(useMiles ? kmToMi(routeData.distance) / 2 : routeData.distance / 2) : 100}
+                        value={excludeEndMiles}
+                        onChange={(e) => setExcludeEndMiles(Math.max(0, Number(e.target.value) || 0))}
+                      />
+                      <span>{useMiles ? 'mi' : 'km'}</span>
+                    </div>
+                  </div>
                   <button
                     className="refresh-btn"
                     onClick={async () => {
@@ -4409,13 +4681,54 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
                   // Build timeline with interleaved mile markers
                   const intervalKm = useMiles ? miToKm(10) : 10;
                   const totalDistKm = routeData.distance;
+                  const totalDistDisplay = useMiles ? kmToMi(totalDistKm) : totalDistKm;
+                  const isUltraRoute = totalDistDisplay >= 200;
 
-                  // Create mile markers every 10 miles/km
+                  // Create mile markers every 10 miles/km (or 50 for ultra routes in nav)
                   const mileMarkers = [];
                   for (let distKm = intervalKm; distKm < totalDistKm; distKm += intervalKm) {
                     const markerValue = useMiles ? Math.round(kmToMi(distKm)) : Math.round(distKm);
                     mileMarkers.push({ distanceKm: distKm, label: `${markerValue} ${useMiles ? 'mi' : 'km'}` });
                   }
+
+                  // Create nav markers (10 mi intervals for standard, 50 mi for ultra)
+                  const navInterval = isUltraRoute ? 50 : 10;
+                  const navIntervalKm = useMiles ? miToKm(navInterval) : navInterval;
+                  const navMarkers = [];
+                  for (let distKm = 0; distKm <= totalDistKm; distKm += navIntervalKm) {
+                    const markerValue = useMiles ? Math.round(kmToMi(distKm)) : Math.round(distKm);
+                    const poisInRange = filteredPOIs.filter(p => {
+                      const pDist = useMiles ? kmToMi(p.distanceKm) : p.distanceKm;
+                      return pDist >= markerValue && pDist < markerValue + navInterval;
+                    }).length;
+                    navMarkers.push({
+                      distanceKm: distKm,
+                      label: markerValue === 0 ? 'S' : markerValue.toString(),
+                      fullLabel: markerValue === 0 ? 'Start' : `${useMiles ? 'Mi' : 'Km'} ${markerValue}`,
+                      resourceCount: poisInRange
+                    });
+                  }
+                  // Add finish marker
+                  const finishDist = useMiles ? Math.round(kmToMi(totalDistKm)) : Math.round(totalDistKm);
+                  navMarkers.push({
+                    distanceKm: totalDistKm,
+                    label: 'F',
+                    fullLabel: 'Finish',
+                    resourceCount: 0
+                  });
+
+                  // Scroll to mile function
+                  const scrollToMile = (marker) => {
+                    const targetId = marker.label === 'S' || marker.label === 'F'
+                      ? null
+                      : `mile-${marker.label}-${useMiles ? 'mi' : 'km'}`;
+                    if (targetId) {
+                      const el = document.getElementById(targetId);
+                      if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      }
+                    }
+                  };
 
                   // Combine POIs and mile markers, sorted by distance
                   const allItems = [
@@ -4423,7 +4736,109 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
                     ...mileMarkers.map(m => ({ type: 'marker', data: m, distanceKm: m.distanceKm }))
                   ].sort((a, b) => a.distanceKm - b.distanceKm);
 
+                  // Count on-route items for legend
+                  const onRouteCount = filteredPOIs.filter(p => p.distanceOffRoute < 50).length;
+
                   return (
+                    <div>
+                      {/* Mile Navigation Bar */}
+                      {isUltraRoute ? (
+                        <nav className="ultra-nav">
+                          <div className="ultra-nav-inner">
+                            <div className="ultra-nav-info">
+                              <span className="ultra-nav-label">Jump to {useMiles ? 'Mile' : 'Km'}</span>
+                              <span className="ultra-nav-route">{routeData.name}</span>
+                            </div>
+                            <div className="ultra-nav-scroll">
+                              {navMarkers.map((marker, idx) => (
+                                <React.Fragment key={idx}>
+                                  {idx > 0 && idx % 4 === 0 && <div className="ultra-nav-divider"></div>}
+                                  <button
+                                    className={`ultra-nav-btn ${idx === 0 ? 'passed' : ''}`}
+                                    onClick={() => scrollToMile(marker)}
+                                    title={marker.fullLabel}
+                                  >
+                                    <span className="ultra-mile">{marker.label}</span>
+                                    {marker.resourceCount > 0 && (
+                                      <span className="ultra-resources">{marker.resourceCount} stops</span>
+                                    )}
+                                    {marker.resourceCount > 0 && (
+                                      <span className="ultra-badge">{marker.resourceCount}</span>
+                                    )}
+                                  </button>
+                                </React.Fragment>
+                              ))}
+                            </div>
+                            <div className="ultra-nav-jump">
+                              <label>Go to:</label>
+                              <input
+                                type="number"
+                                placeholder={useMiles ? 'Mile' : 'Km'}
+                                min="0"
+                                max={Math.round(totalDistDisplay)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    const val = parseInt(e.target.value);
+                                    if (!isNaN(val)) {
+                                      // Find nearest marker
+                                      const nearestMarker = Math.round(val / 10) * 10;
+                                      const el = document.getElementById(`mile-${nearestMarker}-${useMiles ? 'mi' : 'km'}`);
+                                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    }
+                                  }
+                                }}
+                              />
+                              <button onClick={(e) => {
+                                const input = e.target.previousSibling;
+                                const val = parseInt(input.value);
+                                if (!isNaN(val)) {
+                                  const nearestMarker = Math.round(val / 10) * 10;
+                                  const el = document.getElementById(`mile-${nearestMarker}-${useMiles ? 'mi' : 'km'}`);
+                                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }
+                              }}>Jump</button>
+                            </div>
+                          </div>
+                        </nav>
+                      ) : (
+                        <nav className="mile-nav">
+                          <div className="mile-nav-inner">
+                            <span className="mile-nav-label">Jump to {useMiles ? 'Mile' : 'Km'}</span>
+                            <div className="mile-nav-track">
+                              <div className="mile-nav-line"></div>
+                              <div className="mile-nav-buttons">
+                                {navMarkers.map((marker, idx) => (
+                                  <button
+                                    key={idx}
+                                    className={`mile-nav-btn ${idx === 0 ? 'passed' : ''}`}
+                                    onClick={() => scrollToMile(marker)}
+                                    title={marker.fullLabel}
+                                  >
+                                    <div className="mile-nav-dot">{marker.label}</div>
+                                    <span className="mile-nav-mile">{marker.fullLabel}</span>
+                                    {marker.resourceCount > 0 && (
+                                      <span className="mile-nav-resources">{marker.resourceCount}</span>
+                                    )}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </nav>
+                      )}
+
+                      {/* Legend */}
+                      <div className="timeline-legend">
+                        <div className="timeline-legend-item">
+                          <div className="timeline-legend-swatch on-route"></div>
+                          <span><strong>On Route</strong> — No detour ({onRouteCount})</span>
+                        </div>
+                        <div className="timeline-legend-item">
+                          <div className="timeline-legend-swatch off-route"></div>
+                          <span><strong>Off Route</strong> — Requires detour ({filteredPOIs.length - onRouteCount})</span>
+                        </div>
+                      </div>
+
                     <div className="timeline">
                       <div className="timeline-item">
                         <div className="timeline-marker start">▶</div>
@@ -4437,9 +4852,11 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
                       {allItems.map((item, idx) => {
                         if (item.type === 'marker') {
                           return (
-                            <div key={`marker-${idx}`} className="timeline-mile-marker">
-                              <div className="timeline-mile-marker-dot"></div>
-                              <span className="timeline-mile-marker-label">{item.data.label}</span>
+                            <div key={`marker-${idx}`} className="timeline-mile-marker-enhanced" id={`mile-${item.data.label.replace(/\s/g, '-')}`}>
+                              <div className="mile-marker-badge">
+                                <span className="mile-marker-number">{item.data.label.toUpperCase()}</span>
+                                <span className="mile-marker-connector"></span>
+                              </div>
                             </div>
                           );
                         }
@@ -4447,6 +4864,7 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
                         const poi = item.data;
                         const cat = POI_CATEGORIES[poi.category];
                         const detourClass = poi.distanceOffRoute > 200 ? 'far' : '';
+                        const isOnRoute = poi.distanceOffRoute < 50;
                         const distLabel = useMiles
                           ? `Mile ${kmToMi(poi.distanceKm).toFixed(1)}`
                           : `Km ${poi.distanceKm.toFixed(1)}`;
@@ -4454,7 +4872,7 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
                         const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${poi.coordinates[0]},${poi.coordinates[1]}`;
 
                         return (
-                          <div key={poi.id} className={`timeline-item ${poi.isPlannedStop ? 'planned-stop' : ''}`}>
+                          <div key={poi.id} className={`timeline-item ${poi.isPlannedStop ? 'planned-stop' : ''} ${isOnRoute ? 'on-route' : ''}`}>
                             <div className={`timeline-marker ${poi.category}`}>
                               <cat.icon />
                             </div>
@@ -4579,6 +4997,7 @@ ${stopsToExport.map(poi => `  <wpt lat="${poi.coordinates[0]}" lon="${poi.coordi
                           </div>
                         </div>
                       </div>
+                    </div>
                     </div>
                   );
                 })()}
